@@ -87,45 +87,65 @@ if 1:
     # construct the argument parser and parse the arguments for this module
     ap = argparse.ArgumentParser()
 
+    # specify use of Coral TPU stick
+    ap.add_argument("-tpu", "--TPU", action="store_true", help="Use Coral TPU device instead of CPU for SSD thread")
+
     # enable zoom and verify using yolo inference (requires Nvidia cuda capable video card and working CUDA installation.
     ap.add_argument("-y8v", "--yolo8_verify", action="store_true", help="Verify detection with a CUDA yolov8 inference on zoomed region")
     ap.add_argument("-y8ovv", "--yolo8ov_verify", action="store_true", help="Verify detection with openvino GPU yolov8 inference on zoomed region")
+    
+    # parameters that might be installation dependent
+    ap.add_argument("-c", "--confidence", type=float, default=0.70, help="Detection confidence threshold")
+    ap.add_argument("-vc", "--verifyConfidence", type=float, default=0.80, help="Detection confidence for verification")
+    ap.add_argument("-yvc", "--yoloVerifyConfidence", type=float, default=0.75, help="Detection confidence for yolp verification")
+    ap.add_argument("-blob", "--blobFilter", type=float, default=0.33, help="Reject detections that are more than this fraction of the frame")
 
     # yolo8 verification
     ap.add_argument("-yvq", "--YoloVQ", type=int, default=10, help="Depth of YOLO verification queue, should be about YOLO framerate, default=10")
     ap.add_argument("-rq", "--resultsQ", type=int, default=10, help="Minimum Depth of results queue, default=10")
 
-    # parameters that might be installation dependent
-    ap.add_argument("-c", "--confidence", type=float, default=0.70, help="detection confidence threshold")
-    ap.add_argument("-vc", "--verifyConfidence", type=float, default=0.80, help="detection confidence for verification")
-    ap.add_argument("-yvc", "--yoloVerifyConfidence", type=float, default=0.75, help="detection confidence for yolp verification")
-    ap.add_argument("-blob", "--blobFilter", type=float, default=0.33, help="reject detections that are more than this fraction of the frame")
-
-    # specify number of Coral TPU sticks
-    ap.add_argument("-tpu", "--TPU", action="store_true", help="use Coral TPU device for SSD thread")
-
     # specify text file with list of URLs for camera rtsp streams
-    ap.add_argument("-rtsp", "--rtspURLs", default="cameraURL.rtsp", help="path to file containing rtsp camera stream URLs")
+    ap.add_argument("-rtsp", "--rtspURLs", default="cameraURL.rtsp", help="Path to file containing rtsp camera stream URLs")
 
     # specify text file with list of URLs cameras http "Onvif" snapshot jpg images
-    ap.add_argument("-cam", "--cameraURLs", default="cameraURL.txt", help="path to file containing http camera jpeg image URLs")
+    ap.add_argument("-cam", "--cameraURLs", default="cameraURL.txt", help="Path to file containing http camera jpeg image URLs")
 
     # display mode, mostly for test/debug and setup, general plan would be to run "headless"
-    ap.add_argument("-d", "--display", action="store_true", help="display live images on host screen")
+    ap.add_argument("-d", "--display", action="store_true", help="Display live images on host screen")
 
     # specify MQTT broker
-    ap.add_argument("-mqtt", "--mqttBroker", default="localhost", help="name or IP of MQTT Broker")
+    ap.add_argument("-mqtt", "--mqttBroker", default="localhost", help="Name or IP of MQTT Broker")
 
     # specify display width and height
-    ap.add_argument("-dw", "--displayWidth", type=int, default=3840, help="host display Width in pixels, default=1920")
-    ap.add_argument("-dh", "--displayHeight", type=int, default=2160, help="host display Height in pixels, default=1080")
+    ap.add_argument("-dw", "--displayWidth", type=int, default=1920, help="Host display Width in pixels, default=1920")
+    ap.add_argument("-dh", "--displayHeight", type=int, default=1080, help="Host display Height in pixels, default=1080")
 
     # specify host display width and height of camera image
-    ap.add_argument("-iw", "--imwinWidth", type=int, default=640, help="camera host display window Width in pixels, default=640")
-    ap.add_argument("-ih", "--imwinHeight", type=int, default=360, help="camera host display window Height in pixels, default=360")
+    ap.add_argument("-iw", "--imwinWidth", type=int, default=608, help="Camera host display window Width in pixels, default=608")
+    ap.add_argument("-ih", "--imwinHeight", type=int, default=342, help="Camera host display window Height in pixels, default=342")
+
+    # These are too help the auto tiling algorithm, but not realiabe with window manager and CV2 version difference
+    ap.add_argument("-Ytop", "--Ytop", type=int, default=0, help="Y in pixels to move all windows down for tiling, default=0")
+    ap.add_argument("-Xleft", "--Xleft", type=int, default=0, help="X in pixels to move all windows left for tiling, default=0")
+    ap.add_argument("-Yoff", "--Yoffset", type=int, default=56, help="Y offset to account for window decorations, default=56")
+    ap.add_argument("-Xoff", "--Xoffset", type=int, default=0, help="X offset to account for window decorations, default=0")
+    
+    # show zoom image of detections even if -d parameter is 0
+    ap.add_argument("-z", "--DisplayZoom", action="store_true", help="Always display zoomed image of detection.")
+    ap.add_argument("-y", "--DisplayYolo", action="store_true", help="Always Yolo detect/reject.")
+    
+    # Disable local save of detections on AI host -nls is same as -nsz and -nsf options
+    ap.add_argument("-nls", "--NoLocalSave", action="store_true", help="No saving of detection images on local AI host")
+    # don't save zoomed image locally
+    ap.add_argument("-nsz", "--NoSaveZoom", action="store_true", help="Don't locally save zoomed detection image")
+    # don't save full images locally  
+    ap.add_argument("-nsf", "--NoSaveFull", action="store_true", help="Don't locally save full detection frame.")
+
+    # send full frame image of detections to node-red instead of zoomed in on detection
+    ap.add_argument("-nrf", "--nodeRedFull", action="store_true", help="Full frame detection images to node-read instead of zoom images")
 
     # specify file path of location to same detection images on the localhost
-    ap.add_argument("-sp", "--savePath", default="", help="path to location for saving detection images, default ../detect")
+    ap.add_argument("-sp", "--savePath", default="", help="Path to location for saving detection images, default ../detect")
     # save all processed images, fills disk quickly, really slows things down, but useful for test/debug
 
     ## CLAHE parameters
@@ -134,20 +154,7 @@ if 1:
     ap.add_argument("-clahe", "--CLAHE", action="store_true", help="Enable CLAHE contrast enhancement on zoomed detection")
 
     # debug visulize verification rejections
-    ap.add_argument("-dbg", "--debug", action="store_true", help="enable debug display of verification failures")
-
-    # show zoom image of detections even if -d parameter is 0
-    ap.add_argument("-z", "--zoom", action="store_true", help="always display zoomed image of detection.")
-    
-    # Disable local save of detections on AI host -nls is same as -nsz and -nsf options
-    ap.add_argument("-nls", "--NoLocalSave", action="store_true", help="no saving of detection images on local AI host")
-    # don't save zoomed image locally
-    ap.add_argument("-nsz", "--NoSaveZoom", action="store_true", help="don't locally save zoomed detection image")
-    # don't save full images locally  
-    ap.add_argument("-nsf", "--NoSaveFull", action="store_true", help="don't locally save full detection frame.")
-
-    # send full frame image of detections to node-red instead of zoomed in on detection
-    ap.add_argument("-nrf", "--nodeRedFull", action="store_true", help="full frame detection images to node-read instead of zoom images")
+    ap.add_argument("-dbg", "--debug", action="store_true", help="Enable debug display of verification failures")
 
     args = vars(ap.parse_args())
 
@@ -169,7 +176,7 @@ print("[INFO] using openCV-" + cv2.__version__)
 def sigint_handler(signal, frame):
         global QUIT
         currentDT = datetime.datetime.now()
-        #print('caught SIGINT, normal exit. -- ' + currentDT.strftime("%Y-%m-%d  %H:%M:%S"))
+        print('caught SIGINT, normal exit. -- ' + currentDT.strftime("%Y-%m-%d  %H:%M:%S"))
         QUIT=True
 
 def sighup_handler(signal, frame):
@@ -187,7 +194,7 @@ def sigquit_handler(signal, frame):
 def sigterm_handler(signal, frame):
         global QUIT
         currentDT = datetime.datetime.now()
-        print('caught SIGTERM! **** ' + currentDT.strftime("%Y-%m-%d  %H:%M:%S"))
+        print('caught SIGTERM, normal exit. ' + currentDT.strftime("%Y-%m-%d  %H:%M:%S"))
         QUIT=True
 
 signal.signal(signal.SIGINT, sigint_handler)
@@ -215,6 +222,7 @@ def on_message(client, userdata, msg):
     global AlarmMode    # would be Notify, Audio, or Idle, Idle mode doesn't save detections
     global UImode
     global CameraToView
+    global QUIT
     if str(msg.topic) == "Alarm/MODE":          # Idle will not save detections, Audio & Notify are the same here
         currentDT = datetime.datetime.now()     # logfile entry
         AlarmMode = str(msg.payload.decode('utf-8'))
@@ -230,6 +238,11 @@ def on_message(client, userdata, msg):
         currentDT = datetime.datetime.now()
         print(str(msg.topic)+": " + str(int(msg.payload)) + currentDT.strftime("   ... %Y-%m-%d %H:%M:%S"))
         CameraToView = int(msg.payload)
+        return
+    if str(msg.topic) == "Alarm/QUIT":    # dashboard message to exit program, signals seem unreliable on recent Ubuntu update! (~7AUG2024)
+        currentDT = datetime.datetime.now()
+        print(str(msg.topic)+": "  + currentDT.strftime("   ... %Y-%m-%d %H:%M:%S"))
+        QUIT = True
         return
 
 
@@ -301,14 +314,32 @@ def main():
     displayHeight = args["displayHeight"]
     imwinWidth = args["imwinWidth"]
     imwinHeight = args["imwinHeight"]
+    Ytop = args["Ytop"]
+    Xleft = args["Xleft"]
+    Yborder = args["Yoffset"]
+    Xborder = args["Xoffset"]
     savePath = args["savePath"]
     NoLocalSave = args["NoLocalSave"]
     NoSaveZoom = args["NoSaveZoom"]
     NoSaveFull = args["NoSaveFull"]
     nodeRedFull= args["nodeRedFull"]
     __DEBUG__ = args["debug"]
-    show_zoom = args["zoom"]
+    show_zoom = args["DisplayZoom"]
+    show_yolo = args["DisplayYolo"]
+    if show_zoom and show_yolo:
+        print("[INFO] Doesn't make sense to use both -z and -y, detection_zoom and yolo_verify are the same when Person Detected.")
+    # *** connect to MQTT broker for control/status messages
+    print("\n[INFO] connecting to MQTT " + MQTTserver + " broker...")
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.on_publish = on_publish
+    client.on_disconnect = on_disconnect
+    client.will_set("AI/Status", "Python AI2 has died!", 2, True)  # let everyone know we have died, perhaps node-red can restart it
+    client.connect(MQTTserver, 1883, 60)
+    client.loop_start()
 
+    client.publish("AI/Status", "AI2 Python Code Has Started.", 2, True)
     # *** setup path to save AI detection images
     if savePath == "":
         home, _ = os.path.split(os.getcwd())
@@ -319,6 +350,7 @@ def main():
         detectPath=savePath
         if os.path.exists(detectPath) == False:
             print(" Path to location to save detection images must exist!  Exiting ...")
+            client.publish("AI/Status", "Path to location to save detection images must exist!  Exiting ...", 2, True)
             quit()
     OVyolo8_verify=args["yolo8ov_verify"]
     yoloVQdepth=args["YoloVQ"]
@@ -336,18 +368,6 @@ def main():
         GRID_SIZE = (args["GridSize"],args["GridSize"])
         CLIP_LIMIT = args["ClipLimit"]
         clahe = cv2.createCLAHE(CLIP_LIMIT,GRID_SIZE)
-
-
-    # *** connect to MQTT broker for control/status messages
-    print("\n[INFO] connecting to MQTT " + MQTTserver + " broker...")
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.on_publish = on_publish
-    client.on_disconnect = on_disconnect
-    client.will_set("AI/Status", "Python AI has died!", 2, True)  # let everyone know we have died, perhaps node-red can restart it
-    client.connect(MQTTserver, 1883, 60)
-    client.loop_start()
 
 
     # starting AI threads can take a long time, send image and message to dasboard to indicate progress
@@ -369,6 +389,8 @@ def main():
         #Nonvif=len(CameraURL)
         l=[line.split() for line in open(CAMERAS)]
         CameraURL=list()
+        client.publish("AI/Status", "Loading Onvif Camera URLS.", 2, True)
+        time.sleep(1.0)     # give user a chance to see the feedback in node-red
         for i in range(len(l)):
             CameraURL.append(l[i][0])
             if len(l[i]) > 1:
@@ -392,6 +414,7 @@ def main():
         #Nrtsp=len(rtspURL)
         rtspURL=list()
         l=[line.split() for line in open(RTSP)]
+        client.publish("AI/Status", "Loading RTSP Camera URLS.", 2, True)
         for i in range(len(l)):
             rtspURL.append(l[i][0])
             if len(l[i]) > 1:
@@ -414,6 +437,7 @@ def main():
         FErtspURL=list()
         PTZparam=list()
         j=-1
+        client.publish("AI/Status", "Loading fisheye Camera URLS.", 2, True)
         for i in range(len(l)):
             if not l[i]: continue
             if l[i].startswith('rtsp'):
@@ -455,6 +479,7 @@ def main():
 
     # *** allocate queues
     print("[INFO] allocating camera and stream image queues...")
+    client.publish("AI/Status", "Allocating camera and stream image queues.", 2, True)
     # we simply make one queue for each camera, rtsp stream, and MQTTcamera
     QDEPTH = 3      # Make queue depth be three, sometimes get two frames less then 20 mS appart with
                     # "read queue if full and then write frame to queue" in camera input thread
@@ -489,26 +514,30 @@ def main():
     # *** setup display windows if necessary
     # mostly for initial setup and testing, not worth a lot of effort at the moment
     if dispMode:
+        client.publish("AI/Status", "Creating live display windows.", 2, True)
         if Nonvif > 0:
             print("[INFO] setting up Onvif camera image windows ...")
             for i in range(Nonvif):
                 name=str("Live_" + CamName[i])
                 cv2.namedWindow(name, flags=cv2.WINDOW_GUI_NORMAL + cv2.WINDOW_AUTOSIZE)
+                cv2.imshow(name, img)
                 cv2.waitKey(1)
         if Nrtsp > 0:
             print("[INFO] setting up rtsp camera image windows ...")
             for i in range(Nrtsp):
                 name=str("Live_" + CamName[i+Nonvif])
                 cv2.namedWindow(name, flags=cv2.WINDOW_GUI_NORMAL + cv2.WINDOW_AUTOSIZE)
+                cv2.imshow(name, img)
                 cv2.waitKey(1)
         if NfeCam > 0:
             print("[INFO] setting up  FishEye camera PTZ windows ...")
             for i in range(NfeCam):
                 name=str("Live_" + CamName[i+FishEyeOffset])
                 cv2.namedWindow(name, flags=cv2.WINDOW_GUI_NORMAL + cv2.WINDOW_AUTOSIZE)
+                cv2.imshow(name, img)
                 cv2.waitKey(1)
         # setup yolov4 verification windows
-        if OVyolo8_verify or yolo8_verify:
+        if (OVyolo8_verify or yolo8_verify) and show_yolo:
             print("[INFO] setting up YOLO verification/reject image windows ...")
             cv2.namedWindow("yolo_verify", flags=cv2.WINDOW_GUI_NORMAL + cv2.WINDOW_AUTOSIZE)
             cv2.imshow("yolo_verify", img)
@@ -516,25 +545,32 @@ def main():
             cv2.namedWindow("yolo_reject",flags=cv2.WINDOW_GUI_NORMAL + cv2.WINDOW_AUTOSIZE)
             cv2.imshow("yolo_reject", img)
             cv2.waitKey(1)
-        else:
+        if show_zoom:
             print("[INFO] setting detection zoom image window ...")
             cv2.namedWindow("detection_zoom", flags=cv2.WINDOW_GUI_NORMAL + cv2.WINDOW_AUTOSIZE)
             cv2.imshow("detection_zoom", img)
             cv2.waitKey(1)
 
-        # *** move windows into tiled grid
-        top=20
-        left=2
-        Xborder=3   ## attempt to compensate for openCV window "decorations" varies too much with system to really work
-        Yborder=32
+        # *** attempt to move windows into tiled grid
+        ''' These are set by arguments, these should be the defaults.
+        Ytop=0
+        Xleft=0
+        Xborder=0   ## attempt to compensate for openCV window "decorations" varies too much with system to really work
+        Yborder=56
+        '''
         Xshift=imwinWidth+Xborder
         Yshift=imwinHeight+Yborder
-        Nrows=int(displayHeight/Yshift)
+        Ncols=int(displayWidth/imwinWidth)
+        Nrows=int(displayHeight/imwinHeight)
+        print("[INFO] Attempting to tile live camera display windows.")
+        print(" Rows, Columns: ",Nrows,Ncols)
         for i in range(Ncameras):
-            name=str("Live_" + str(i))
-            col=int(i/Nrows)
-            row=i%Nrows
-            cv2.moveWindow(name, left+col*Xshift, top+row*Yshift)
+            name=str("Live_" + CamName[i])
+            row=int(i/Ncols)
+            col=i%Ncols
+            cv2.moveWindow(name, Xleft+col*Xshift, Ytop+row*Yshift)
+            print("Row, Column, x, y: ",row, col, Ytop+row*Yshift, Xleft+col*Xshift)
+            cv2.waitKey(1)
     else:
         if show_zoom:
             print("[INFO] setting detection zoom image window ...")
@@ -549,12 +585,14 @@ def main():
 
     # these need to be loaded before an AI thread launches them
     if yolo8_verify:
-        #import Ultralytics yolo8 darknet
+        #import Ultralytics yolo8
+        client.publish("AI/Status", "Loading Ultralytics CUDA yolo8.", 2, True)
         import yolo8_verification_Thread
         # using yolov8x.pt for now m is  "fastest" x is "most accurate" l is in between
         yolo8_verification_Thread.__y8modelSTR__ = 'yolo8/yolov8x.pt'
         yolo8_verification_Thread.__verifyConf__ = yoloVerifyConf
     if OVyolo8_verify:
+        client.publish("AI/Status", "Loading OpenVINO yolo8.", 2, True)
         import yolo8OpenvinoVerification_Thread
         yolo8OpenvinoVerification_Thread.__y8modelSTR__ = 'yolov8m'
         yolo8OpenvinoVerification_Thread.__verifyConf__ = yoloVerifyConf
@@ -565,6 +603,7 @@ def main():
     # initialize the labels dictionary
     if nCoral is True:
         print("\n[INFO] starting Coral TPU AI Thread ...")
+        client.publish("AI/Status", "Starting Coral TPU thread.", 2, True)
         import Coral_TPU_Thread
         print("   [INFO] parsing mobilenet_ssd_v2 coco class labels for Coral TPU...")
         modelPath = "mobilenet_ssd_v2/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite"
@@ -590,6 +629,7 @@ def main():
     # ** setup and start openvino CPU AI thread.
     if nCPUthreads is True:
         print("\n[INFO] starting OpenVINO CPU AI Thread ...")
+        client.publish("AI/Status", "Starting OpenVINO MobilenetSSD_v2 thread.", 2, True)
         import OpenVINO_SSD_Thread
         CPUt = list()
         if yolo8_verify or OVyolo8_verify:
@@ -602,8 +642,9 @@ def main():
 
 
     if OVyolo8_verify:
-        # Start darknet yolo v4 thread
+        # Start dopenvino yolo8 thread
         print("\n[INFO] OpenVINO yolo_v8 verification thread is starting ... ")
+        client.publish("AI/Status", "Starting OpenVINO yolo8 verification thread.", 2, True)
         yolo8ov=list()
         yolo8ov.append(Thread(target=yolo8OpenvinoVerification_Thread.yolo8ov_thread, args=(resultsQ, yoloQ)))
         yolo8ov[0].start()
@@ -614,7 +655,8 @@ def main():
 
     if yolo8_verify:
         # Start Ultralytics yolo8 verification thread
-        print("\n[INFO] Ultralytics yolo_v8 verification thread is starting ... ")
+        print("\n[INFO] Ultralytics yolo_v8 verification thread is starting... ")
+        client.publish("AI/Status", "Starting Ultralytics CUDA yolo8 verification Thread.", 2, True)
         yolo8=list()
         yolo8.append(Thread(target=yolo8_verification_Thread.yolov8_thread,args=(resultsQ, yoloQ)))
         yolo8[0].start()
@@ -629,7 +671,7 @@ def main():
     img = np.zeros(( imwinHeight, imwinWidth, 3), np.uint8)
     img[:,:] = (127,127,192)
     retv, img_as_jpg = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
-    client.publish("ImageBuffer/!Starting RTSP threads, this can take awhile.", bytearray(img_as_jpg), 0, False)
+    client.publish("ImageBuffer/!Starting Camera stream threads, this can take awhile.", bytearray(img_as_jpg), 0, False)
 
     # *** start camera reading threads
     ### Try moving camera threads start up until after verification thread started
@@ -637,11 +679,12 @@ def main():
     if Nonvif > 0:
         import onvif_Thread
         print("\n[INFO] starting " + str(Nonvif) + " Onvif Camera Threads ...")
+        client.publish("AI/Status", "Starting " + str(Nonvif) + " Onvif Camera Threads...", 2, True)
         for i in range(Nonvif):
             onvif_Thread.__CamName__ = CamName
             o.append(Thread(target=onvif_Thread.onvif_thread, args=(inframeQ[i], i, CameraURL[i])))
             o[i].start()
-
+        time.sleep(1.0)     # so node-red UI can have a chance to see the message.
     if Nrtsp+Nfisheye > 0:
         global threadLock
         global threadsRunning
@@ -651,17 +694,21 @@ def main():
             rtsp_thread.__CamName__ = CamName
             o.append(Thread(target=rtsp_thread, args=(inframeQ[i+Nonvif], i+Nonvif, rtspURL[i])))
             o[i+Nonvif].start()
+            client.publish("AI/Status", "Starting Camera : " + str(CamName[i+Nonvif])+ " RTSP Thread.", 2, True)
+            time.sleep(6.0)
         FEoffset=FishEyeOffset
         for i in range(Nfisheye):
             Nfe=len(PTZparam[i])-1  # first entry is camera resolution, not PTZ view parameters
-##            print(PTZparam[i])
+            #print(PTZparam[i])
             ### def FErtsp_thread(inframeQ, Nfe, FEoffset, PTZparam, camn, URL):
             o.append(Thread(target=FErtsp_thread, args=(inframeQ, Nfe, FEoffset, PTZparam[i], FEoffset+i, FErtspURL[i])))  # for virtual camera
             o[i+Nonvif+Nrtsp].start()
+            client.publish("AI/Status", "Starting Fisheye Camera : " + str(CamName[FEoffset+i])+ " Thread.", 2, True)
             FEoffset+=Nfe
         # make sure rtsp threads are all running
         while threadsRunning < Nrtsp+Nfisheye:
-            time.sleep(0.5)
+            client.publish("AI/Status", str(threadsRunning) + " Of " + str(Nrtsp+Nfisheye) + " RTSP Threads Running", 2, True)
+            time.sleep(2.0)
         print("\n[INFO] All " + str(Nrtsp+Nfisheye) + " RTSP Camera Sampling Threads are running.")
 
 
@@ -676,7 +723,6 @@ def main():
     detectCount=0
     prevUImode=UImode
     currentDT = datetime.datetime.now()
-    client.publish("AI/Status", "Python AI running." + currentDT.strftime("  %Y-%m-%d %H:%M:%S"), 2, True)
     # *** MQTT send a blank image to the dashboard UI
     print("[INFO] Clearing dashboard ...")
     img = np.zeros(( imwinHeight, imwinWidth, 3), np.uint8)
@@ -686,7 +732,8 @@ def main():
     #start the FPS counter
     print("[INFO] starting the FPS counter ...")
     fps = FPS().start()
-    print("\n[INFO] AI/Status: Python AI running." + currentDT.strftime("  %Y-%m-%d %H:%M:%S"))
+    print("\n[INFO] AI/Status: Python AI2 code is running." + currentDT.strftime("  %Y-%m-%d %H:%M:%S"))
+    client.publish("AI/Status", "Python AI2 code running." + currentDT.strftime("  %Y-%m-%d %H:%M:%S"), 2, True)
 
     while not QUIT:
         try:
@@ -793,7 +840,7 @@ def main():
                     key = cv2.waitKey(1) ###& 0xFF
                     ###if key == ord("q"): # if the `q` key was pressed, break from the loop
                     ###    QUIT=True   # exit main loop
-                    if (OVyolo8_verify or yolo8_verify) and yolo_frame is not None:
+                    if (OVyolo8_verify or yolo8_verify) and show_yolo and yolo_frame is not None:
                         if personDetected:
                             cv2.imshow("yolo_verify", yolo_frame)
                         else:
@@ -801,18 +848,20 @@ def main():
                         key = cv2.waitKey(1) ### & 0xFF
                         ###if key == ord("q"): # if the `q` key was pressed, break from the loop
                         ###    QUIT=True   # exit main loop
-                    else:
-                        if personDetected:
+                        if personDetected and show_zoom:
                             cv2.imshow("detection_zoom", yolo_frame)
                             cv2.waitKey(1)
-                        ###key = cv2.waitKey(1) & 0xFF
-                        ###if key == ord("q"): # if the `q` key was pressed, break from the loop
-                        ###    QUIT=True   # exit main loop
-                else:
+                else:   # Handle -z and/or -y if dispMode is False
                     if show_zoom:
                         if personDetected:
                             cv2.imshow("detection_zoom", yolo_frame)
                             cv2.waitKey(1)
+                    if (OVyolo8_verify or yolo8_verify) and show_yolo and yolo_frame is not None:
+                        if personDetected:
+                            cv2.imshow("yolo_verify", yolo_frame)
+                        else:
+                            cv2.imshow("yolo_reject", yolo_frame)
+                        key = cv2.waitKey(1) ### & 0xFF
 
                 aliveCount = (aliveCount+1) % SEND_ALIVE
                 if aliveCount == 0:
@@ -851,9 +900,6 @@ def main():
     print("    [INFO] Frames processed by AI system: " + str(fps._numFrames))
     print("    [INFO] Person Detection by AI system: " + str(detectCount))
     print("    [INFO] Main loop waited for resultsQ: " + str(waitCnt) + " times.\n")
-    currentDT = datetime.datetime.now()
-    client.publish("AI/Status", "Python AI stopped." + currentDT.strftime("  %Y-%m-%d %H:%M:%S"), 2, True)
-    print("[INFO] AI/Status: Python AI stopped." + currentDT.strftime("  %Y-%m-%d %H:%M:%S"))
 
     # Send a blank image the dashboard UI
     print("[INFO] Clearing dashboard ...")
@@ -862,6 +908,9 @@ def main():
     retv, img_as_jpg = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
     client.publish("ImageBuffer/!AI has Exited.", bytearray(img_as_jpg), 0, False)
     time.sleep(1.0)
+    currentDT = datetime.datetime.now()
+    client.publish("AI/Status", "Python AI2 exiting." + currentDT.strftime("  %Y-%m-%d %H:%M:%S"), 2, True)
+    print("[INFO] AI/Status: Python AI2 exiting." + currentDT.strftime("  %Y-%m-%d %H:%M:%S"))
 
     # stop Yolo v8 AI Thread
     if OVyolo8_verify:
@@ -869,33 +918,40 @@ def main():
         yolo8OpenvinoVerification_Thread.__Thread__ = False
         yolo8ov[0].join()
         print("[INFO] OpenVINO yolov8 verification Thread has exited.")
-
+        client.publish("AI/Status", "OpenVINO yolov8 verification Thread has exited.", 2, True)
     # Stop and wait for capture threads to exit
     if Nonvif > 0:
         print("[INFO] Stopping Onvif camera threads ...")
+        client.publish("AI/Status", "Waiting for ONVIF camera Threads to exit...", 2, True)
         onvif_Thread.__onvifThread__ = False
         for i in range(Nonvif):
             o[i].join()
-        print("[INFO] All Onvif camera threads have exited.")
+        print("[INFO] All ONVIF camera threads have exited.")
+        client.publish("AI/Status", "All ONVIF camera Threads have exited.", 2, True)
     if Nrtsp > 0:
         print("[INFO] Stopping RTSP camera threads ...")
+        client.publish("AI/Status", "Waiting for RTSP camera Threads to exit...", 2, True)
         __rtspThread__ = False
         for i in range(Nrtsp):
             o[i+Nonvif].join()
         print("[INFO] All RTSP camera threads have exited.")
+        client.publish("AI/Status", "All RTSP camera Threads have exited.", 2, True)
     if Nfisheye > 0:
         print("[INFO] Stopping Fisheye camera threads ...")
+        client.publish("AI/Status", "Waiting  for Fisheye camera Threads to exit...", 2, True)
         __fisheyeThread__ = False
         for i in range(Nfisheye):
             o[i+Nonvif+Nrtsp].join()
         print("[INFO] All Fisheye camera threads have exited.")
+        client.publish("AI/Status", "All Fisheye camera Threads have exited.", 2, True)
 
     # stop TPU AI thread
     if nCoral is True:
         print("[INFO] Stopping TPU Thread ...")
         Coral_TPU_Thread.__Thread__ = False   # maybe my QUITf() was clenaer, but I can stage the thread exits for debugging.
         Ct[0].join()
-        print("[INFO] All Coral TPU AI Threads have exited.")
+        print("[INFO] Coral TPU AI Thread has exited.")
+        client.publish("AI/Status", "Coral TPU thread has exited.", 2, True)
 
     # Stop OpenVINO CPU thread
     if nCPUthreads is True:
@@ -903,21 +959,23 @@ def main():
         OpenVINO_SSD_Thread.__Thread__ = False
         CPUt[0].join()
         print("[INFO] CPU AI Thread has exited.")
+        client.publish("AI/Status", "CPU AI  Thread has exited.", 2, True)
 
     #$$$#  stop yolo verify thread
     if yolo8_verify:
-        print("[INFO] Stopping yolo8 verification Thread ...")
+        print("[INFO] Stopping CUDA yolo8 verification Thread ...")
         yolo8_verification_Thread.__Thread__ = False
         yolo8[0].join()
         print("[INFO] yolov8 verification Thread has exited.")
+        client.publish("AI/Status", "CUDA yolov8 verification Thread has exited.", 2, True)
 
     # destroy all windows if we are displaying them
     if args["display"] > 0:
         cv2.destroyAllWindows()
 
-
-
     # clean up MQTT
+    client.publish("AI/Status", "AI2 Program has exited.", 2, True)
+    time.sleep(2.0)
     client.disconnect()     # normal exit, Will message should not be sent.
     currentDT = datetime.datetime.now()
     print("[INFO] Stopping MQTT Threads." + currentDT.strftime("  %Y-%m-%d %H:%M:%S"))

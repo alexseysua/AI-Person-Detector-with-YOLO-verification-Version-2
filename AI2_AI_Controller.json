@@ -2,7 +2,7 @@
     {
         "id": "7fdf004e.28b08",
         "type": "tab",
-        "label": "Basic AI2 Controller",
+        "label": "AI2.py and AI.py Controller",
         "disabled": false,
         "info": ""
     },
@@ -393,8 +393,8 @@
         "name": "",
         "action": "str",
         "property": "payload",
-        "x": 450,
-        "y": 445,
+        "x": 455,
+        "y": 460,
         "wires": [
             [
                 "7a8e0283.0546cc",
@@ -522,8 +522,8 @@
         "topic": "Alarm/UImode",
         "topicType": "str",
         "className": "",
-        "x": 305,
-        "y": 800,
+        "x": 315,
+        "y": 900,
         "wires": [
             [
                 "73c6d7c2.71cb88"
@@ -539,8 +539,8 @@
         "qos": "2",
         "retain": "true",
         "broker": "a12f6f63.c32c7",
-        "x": 485,
-        "y": 800,
+        "x": 495,
+        "y": 900,
         "wires": []
     },
     {
@@ -555,8 +555,8 @@
         "nl": false,
         "rap": false,
         "inputs": 0,
-        "x": 90,
-        "y": 500,
+        "x": 95,
+        "y": 515,
         "wires": [
             [
                 "6a391816.66ef98"
@@ -603,7 +603,7 @@
         "payload": "3",
         "payloadType": "str",
         "x": 120,
-        "y": 800,
+        "y": 900,
         "wires": [
             [
                 "38328575.34a5ba"
@@ -650,8 +650,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 300,
-        "y": 500,
+        "x": 305,
+        "y": 515,
         "wires": [
             [
                 "3f6b6b7e.e47ae4"
@@ -670,8 +670,8 @@
         "ret": "\\n",
         "temp": "topic,filename",
         "skip": "0",
-        "x": 125,
-        "y": 445,
+        "x": 130,
+        "y": 460,
         "wires": [
             [
                 "1ed0e097.e6a1cf"
@@ -711,8 +711,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 280,
-        "y": 445,
+        "x": 285,
+        "y": 460,
         "wires": [
             [
                 "33e58de.4016972"
@@ -864,7 +864,7 @@
         "payload": "0",
         "payloadType": "num",
         "x": 130,
-        "y": 860,
+        "y": 960,
         "wires": [
             [
                 "edbfd720.c74178"
@@ -931,8 +931,8 @@
         "topic": "ViewCamera",
         "topicType": "str",
         "className": "",
-        "x": 360,
-        "y": 860,
+        "x": 340,
+        "y": 960,
         "wires": [
             [
                 "53717043.9e403"
@@ -948,50 +948,22 @@
         "qos": "2",
         "retain": "true",
         "broker": "a12f6f63.c32c7",
-        "x": 570,
-        "y": 860,
+        "x": 545,
+        "y": 960,
         "wires": []
-    },
-    {
-        "id": "b2244a1a.233fc8",
-        "type": "ui_button",
-        "z": "7fdf004e.28b08",
-        "name": "StartAI",
-        "group": "1f34e858.de7018",
-        "order": 1,
-        "width": "3",
-        "height": "1",
-        "passthru": false,
-        "label": "Start  AI",
-        "tooltip": "Launch the Python AI code",
-        "color": "",
-        "bgcolor": "#20d020",
-        "className": "",
-        "icon": "",
-        "payload": "Launching AI2 python code",
-        "payloadType": "str",
-        "topic": "filename",
-        "topicType": "str",
-        "x": 70,
-        "y": 600,
-        "wires": [
-            [
-                "3dc2b68f64714a9e"
-            ]
-        ]
     },
     {
         "id": "e379de04.75afd",
         "type": "debug",
         "z": "7fdf004e.28b08",
         "name": "",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 435,
-        "y": 1000,
+        "x": 430,
+        "y": 1080,
         "wires": []
     },
     {
@@ -1000,7 +972,7 @@
         "z": "7fdf004e.28b08",
         "name": "PowerOff",
         "group": "1f34e858.de7018",
-        "order": 4,
+        "order": 5,
         "width": "3",
         "height": "1",
         "passthru": false,
@@ -1012,8 +984,8 @@
         "payload": "",
         "payloadType": "date",
         "topic": "",
-        "x": 85,
-        "y": 1000,
+        "x": 80,
+        "y": 1080,
         "wires": [
             [
                 "e3630bdc.12c098"
@@ -1032,8 +1004,8 @@
         "winHide": false,
         "oldrc": false,
         "name": "shutdown",
-        "x": 265,
-        "y": 1000,
+        "x": 260,
+        "y": 1080,
         "wires": [
             [
                 "e379de04.75afd"
@@ -1051,13 +1023,13 @@
         "type": "debug",
         "z": "7fdf004e.28b08",
         "name": "",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 435,
-        "y": 1060,
+        "x": 430,
+        "y": 1140,
         "wires": []
     },
     {
@@ -1072,8 +1044,8 @@
         "winHide": false,
         "oldrc": false,
         "name": "reboot",
-        "x": 255,
-        "y": 1060,
+        "x": 250,
+        "y": 1140,
         "wires": [
             [
                 "29303650.3cc2ea"
@@ -1092,7 +1064,7 @@
         "z": "7fdf004e.28b08",
         "name": "Reboot",
         "group": "1f34e858.de7018",
-        "order": 3,
+        "order": 4,
         "width": "3",
         "height": "1",
         "passthru": false,
@@ -1104,8 +1076,8 @@
         "payload": "",
         "payloadType": "date",
         "topic": "",
-        "x": 85,
-        "y": 1060,
+        "x": 80,
+        "y": 1140,
         "wires": [
             [
                 "39975be8.4e6f44"
@@ -1173,76 +1145,6 @@
         "wires": []
     },
     {
-        "id": "baef9bba.1564b8",
-        "type": "inject",
-        "z": "7fdf004e.28b08",
-        "name": "Launch AI",
-        "props": [
-            {
-                "p": "payload",
-                "v": "",
-                "vt": "date"
-            },
-            {
-                "p": "topic",
-                "v": "",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": true,
-        "onceDelay": "0.5",
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 110,
-        "y": 660,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "4dd28635.b13008",
-        "type": "mqtt in",
-        "z": "7fdf004e.28b08",
-        "name": "AmAlive",
-        "topic": "AmAlive",
-        "qos": "0",
-        "broker": "f7f213b3.fdec4",
-        "inputs": 0,
-        "x": 80,
-        "y": 720,
-        "wires": [
-            [
-                "721843a5.9e2d7c"
-            ]
-        ]
-    },
-    {
-        "id": "721843a5.9e2d7c",
-        "type": "trigger",
-        "z": "7fdf004e.28b08",
-        "name": "watchdog",
-        "op1": "",
-        "op2": "Watchdog Timeout Onvif AI Restart!",
-        "op1type": "nul",
-        "op2type": "str",
-        "duration": "5",
-        "extend": true,
-        "overrideDelay": false,
-        "units": "min",
-        "reset": "",
-        "bytopic": "all",
-        "topic": "topic",
-        "outputs": 1,
-        "x": 220,
-        "y": 720,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "e43e2bb8.05a588",
         "type": "mqtt in",
         "z": "7fdf004e.28b08",
@@ -1256,7 +1158,7 @@
         "wires": [
             [
                 "29e0d7fd.77f8c8",
-                "97fd33e8f3ccf461"
+                "77b336b02f99e075"
             ]
         ]
     },
@@ -1270,7 +1172,7 @@
         "console": false,
         "tostatus": false,
         "complete": "true",
-        "x": 250,
+        "x": 390,
         "y": 360,
         "wires": []
     },
@@ -1280,7 +1182,7 @@
         "z": "7fdf004e.28b08",
         "name": "StopAI",
         "group": "1f34e858.de7018",
-        "order": 2,
+        "order": 3,
         "width": "3",
         "height": "1",
         "passthru": false,
@@ -1294,12 +1196,12 @@
         "payloadType": "date",
         "topic": "",
         "topicType": "str",
-        "x": 80,
-        "y": 1120,
+        "x": 75,
+        "y": 1200,
         "wires": [
             [
                 "153cf52a.0a618b",
-                "3341eddb40dd0884"
+                "4712d06f14e0edc1"
             ]
         ]
     },
@@ -1315,8 +1217,8 @@
         "winHide": false,
         "oldrc": false,
         "name": "StopAI",
-        "x": 250,
-        "y": 1120,
+        "x": 245,
+        "y": 1200,
         "wires": [
             [
                 "34b43726.7326d8"
@@ -1326,32 +1228,6 @@
             ],
             [
                 "34b43726.7326d8"
-            ]
-        ]
-    },
-    {
-        "id": "b365a41c.61e018",
-        "type": "exec",
-        "z": "7fdf004e.28b08",
-        "command": "/home/ai/AI2/StartAI.sh ",
-        "addpay": false,
-        "append": "",
-        "useSpawn": "false",
-        "timer": "",
-        "winHide": false,
-        "oldrc": false,
-        "name": "StartAI",
-        "x": 370,
-        "y": 660,
-        "wires": [
-            [
-                "86a4908f.a330b"
-            ],
-            [
-                "86a4908f.a330b"
-            ],
-            [
-                "86a4908f.a330b"
             ]
         ]
     },
@@ -1410,31 +1286,17 @@
         ]
     },
     {
-        "id": "86a4908f.a330b",
-        "type": "debug",
-        "z": "7fdf004e.28b08",
-        "name": "",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "x": 530,
-        "y": 660,
-        "wires": []
-    },
-    {
         "id": "34b43726.7326d8",
         "type": "debug",
         "z": "7fdf004e.28b08",
         "name": "",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 415,
-        "y": 1120,
+        "x": 410,
+        "y": 1200,
         "wires": []
     },
     {
@@ -1457,8 +1319,8 @@
         "payloadType": "str",
         "topic": "",
         "topicType": "str",
-        "x": 600,
-        "y": 490,
+        "x": 615,
+        "y": 500,
         "wires": [
             []
         ]
@@ -1484,8 +1346,8 @@
         "syntax": "mustache",
         "template": "<img height=\"360px\" src=\"data:image/jpg;base64,{{{payload}}}\">",
         "output": "str",
-        "x": 615,
-        "y": 445,
+        "x": 620,
+        "y": 460,
         "wires": [
             [
                 "2baf23ca.ee81fc"
@@ -1507,7 +1369,7 @@
         "resendOnRefresh": false,
         "templateScope": "local",
         "x": 770,
-        "y": 445,
+        "y": 460,
         "wires": [
             []
         ]
@@ -1575,17 +1437,155 @@
         ]
     },
     {
-        "id": "a743ca26b53a2ee4",
+        "id": "baef9bba.1564b8",
+        "type": "inject",
+        "z": "7fdf004e.28b08",
+        "name": "Launch AI",
+        "props": [
+            {
+                "p": "payload",
+                "v": "",
+                "vt": "date"
+            },
+            {
+                "p": "topic",
+                "v": "",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.5",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4dd28635.b13008",
+        "type": "mqtt in",
+        "z": "7fdf004e.28b08",
+        "name": "AmAlive",
+        "topic": "AmAlive",
+        "qos": "0",
+        "broker": "f7f213b3.fdec4",
+        "inputs": 0,
+        "x": 80,
+        "y": 820,
+        "wires": [
+            [
+                "721843a5.9e2d7c"
+            ]
+        ]
+    },
+    {
+        "id": "721843a5.9e2d7c",
+        "type": "trigger",
+        "z": "7fdf004e.28b08",
+        "name": "watchdog",
+        "op1": "",
+        "op2": "Watchdog Timeout Onvif AI Restart!",
+        "op1type": "nul",
+        "op2type": "str",
+        "duration": "5",
+        "extend": true,
+        "overrideDelay": false,
+        "units": "min",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 240,
+        "y": 820,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b365a41c.61e018",
+        "type": "exec",
+        "z": "7fdf004e.28b08",
+        "command": "/home/ai/AI2/StartAI.sh ",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "StartAI",
+        "x": 430,
+        "y": 760,
+        "wires": [
+            [
+                "86a4908f.a330b"
+            ],
+            [
+                "86a4908f.a330b"
+            ],
+            [
+                "86a4908f.a330b"
+            ]
+        ]
+    },
+    {
+        "id": "86a4908f.a330b",
+        "type": "debug",
+        "z": "7fdf004e.28b08",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 590,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "acf53500416ed6be",
         "type": "comment",
         "z": "7fdf004e.28b08",
         "name": "Auto Start",
         "info": "Wire \"LaunchAI\" node to \"StartAI\" node \nto have the AI start when system is booted.\n\nWire \"watchdog\" node to \"StartAI\" to restart\nthe Python AI if it crashes.  This will also\ncause the AI to start after system boots up\nwhen the watchdog times out in 5 minutes\nafter node-red is running.\n",
         "x": 80,
-        "y": 560,
+        "y": 580,
         "wires": []
     },
     {
-        "id": "3dc2b68f64714a9e",
+        "id": "b2244a1a.233fc8",
+        "type": "ui_button",
+        "z": "7fdf004e.28b08",
+        "name": "StartAI",
+        "group": "1f34e858.de7018",
+        "order": 1,
+        "width": "3",
+        "height": "1",
+        "passthru": false,
+        "label": "Start  AI",
+        "tooltip": "Launch the Python AI2 code",
+        "color": "",
+        "bgcolor": "#20d020",
+        "className": "",
+        "icon": "",
+        "payload": "Launching AI2 python code",
+        "payloadType": "str",
+        "topic": "filename",
+        "topicType": "str",
+        "x": 70,
+        "y": 700,
+        "wires": [
+            [
+                "1f4af9b724fb9b26"
+            ]
+        ]
+    },
+    {
+        "id": "1f4af9b724fb9b26",
         "type": "delay",
         "z": "7fdf004e.28b08",
         "name": "one shot",
@@ -1601,17 +1601,31 @@
         "drop": true,
         "allowrate": false,
         "outputs": 1,
-        "x": 200,
-        "y": 600,
+        "x": 240,
+        "y": 700,
         "wires": [
             [
-                "67a90446aac49b65",
+                "a893b1f81880d976",
                 "b365a41c.61e018"
             ]
         ]
     },
     {
-        "id": "67a90446aac49b65",
+        "id": "8e9c131877607682",
+        "type": "debug",
+        "z": "7fdf004e.28b08",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 590,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "a893b1f81880d976",
         "type": "change",
         "z": "7fdf004e.28b08",
         "name": "feedback",
@@ -1629,16 +1643,17 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 380,
-        "y": 600,
+        "x": 440,
+        "y": 700,
         "wires": [
             [
+                "8e9c131877607682",
                 "7a8e0283.0546cc"
             ]
         ]
     },
     {
-        "id": "0581a04598df109f",
+        "id": "b584b954736a8428",
         "type": "debug",
         "z": "7fdf004e.28b08",
         "name": "",
@@ -1648,11 +1663,11 @@
         "tostatus": false,
         "complete": "true",
         "x": 590,
-        "y": 920,
+        "y": 1020,
         "wires": []
     },
     {
-        "id": "6002b07d3462a89e",
+        "id": "d4e7c1b3a38f0a7a",
         "type": "mqtt in",
         "z": "7fdf004e.28b08",
         "name": "Set Camera Names",
@@ -1664,15 +1679,15 @@
         "rap": false,
         "inputs": 0,
         "x": 110,
-        "y": 920,
+        "y": 1020,
         "wires": [
             [
-                "da9d507dfb319787"
+                "b70f3ead1d14a33a"
             ]
         ]
     },
     {
-        "id": "23e35cb0f5695106",
+        "id": "5db924544e1b419d",
         "type": "change",
         "z": "7fdf004e.28b08",
         "name": "options",
@@ -1691,16 +1706,16 @@
         "to": "",
         "reg": false,
         "x": 440,
-        "y": 920,
+        "y": 1020,
         "wires": [
             [
-                "0581a04598df109f",
+                "b584b954736a8428",
                 "edbfd720.c74178"
             ]
         ]
     },
     {
-        "id": "da9d507dfb319787",
+        "id": "b70f3ead1d14a33a",
         "type": "json",
         "z": "7fdf004e.28b08",
         "name": "",
@@ -1708,15 +1723,15 @@
         "action": "obj",
         "pretty": false,
         "x": 290,
-        "y": 920,
+        "y": 1020,
         "wires": [
             [
-                "23e35cb0f5695106"
+                "5db924544e1b419d"
             ]
         ]
     },
     {
-        "id": "97fd33e8f3ccf461",
+        "id": "77b336b02f99e075",
         "type": "change",
         "z": "7fdf004e.28b08",
         "name": "feedback",
@@ -1743,7 +1758,7 @@
         ]
     },
     {
-        "id": "3341eddb40dd0884",
+        "id": "4712d06f14e0edc1",
         "type": "mqtt out",
         "z": "7fdf004e.28b08",
         "name": "Alarm/QUIT",
@@ -1757,8 +1772,104 @@
         "expiry": "",
         "broker": "a12f6f63.c32c7",
         "x": 270,
-        "y": 1180,
+        "y": 1260,
         "wires": []
+    },
+    {
+        "id": "315941ba944b87ea",
+        "type": "ui_button",
+        "z": "7fdf004e.28b08",
+        "name": "StartObsoleteAI",
+        "group": "1f34e858.de7018",
+        "order": 2,
+        "width": "3",
+        "height": "1",
+        "passthru": false,
+        "label": "Start  Obsolete AI",
+        "tooltip": "Launch the Python AI code",
+        "color": "",
+        "bgcolor": "#400030",
+        "className": "",
+        "icon": "",
+        "payload": "Launching Obsolete AI python code",
+        "payloadType": "str",
+        "topic": "filename",
+        "topicType": "str",
+        "x": 100,
+        "y": 640,
+        "wires": [
+            [
+                "a75f4bbeede24f40"
+            ]
+        ]
+    },
+    {
+        "id": "cf4fd5060edcb775",
+        "type": "exec",
+        "z": "7fdf004e.28b08",
+        "command": "/home/ai/AI/StartAI.sh ",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "Start Obsolete AI",
+        "x": 470,
+        "y": 640,
+        "wires": [
+            [
+                "5eb4c285cc04e02a"
+            ],
+            [
+                "5eb4c285cc04e02a"
+            ],
+            [
+                "5eb4c285cc04e02a"
+            ]
+        ]
+    },
+    {
+        "id": "5eb4c285cc04e02a",
+        "type": "debug",
+        "z": "7fdf004e.28b08",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "a75f4bbeede24f40",
+        "type": "delay",
+        "z": "7fdf004e.28b08",
+        "name": "one shot",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "4",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": true,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 280,
+        "y": 640,
+        "wires": [
+            [
+                "cf4fd5060edcb775",
+                "a893b1f81880d976"
+            ]
+        ]
     },
     {
         "id": "b5381f24.da8dd",
@@ -1846,6 +1957,17 @@
         "collapse": true
     },
     {
+        "id": "a4d1387f.772c08",
+        "type": "ui_group",
+        "name": "Camera Viewer",
+        "tab": "cbe60e1a.85145",
+        "order": 2,
+        "disp": true,
+        "width": "13",
+        "collapse": false,
+        "className": ""
+    },
+    {
         "id": "f7f213b3.fdec4",
         "type": "mqtt-broker",
         "name": "localhost:1883",
@@ -1866,17 +1988,6 @@
         "willQos": "0",
         "willRetain": "false",
         "willPayload": ""
-    },
-    {
-        "id": "a4d1387f.772c08",
-        "type": "ui_group",
-        "name": "Camera Viewer",
-        "tab": "cbe60e1a.85145",
-        "order": 2,
-        "disp": true,
-        "width": "13",
-        "collapse": false,
-        "className": ""
     },
     {
         "id": "cbe60e1a.85145",
