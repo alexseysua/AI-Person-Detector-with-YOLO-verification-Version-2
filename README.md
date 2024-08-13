@@ -31,7 +31,7 @@ Now create a virtual environment to to use with OpenVINO and YOLO8, named y8ovv.
 ### python3 -m venv y8ovv
 Next "activate" the virtual environment:
 ### source y8ovv/bin/activate
-Note that the prompt changes from: ai@YouSeeX1: to: (y80vv) ai@YouSeeX1:
+Note that the prompt changes from: ai@YouSeeX1: to: (y8ovv) ai@YouSeeX1:
 Use pip to install the needed modules:
 ### pip install imutils paho-mqtt requests
 ### pip install "openvino>=2024.2.0" "nncf>=2.9.0"
