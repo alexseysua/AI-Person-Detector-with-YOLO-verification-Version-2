@@ -2,7 +2,7 @@
 This is "Version 2" of the repo: https://github.com/wb666greene/AI-Person-Detector-with-YOLO-Verification
 
 These are my notes for a virgin installation of Ubuntu 22.04 and installation of OpenVINO 2024 release 
-for using Intel integraded GPU for yolo verification.  Motivated by 
+for using Intel integrated GPU for yolo verification.  Motivated by 
 https://igor.technology/installing-coral-usb-accelearator-python-3-10-ubuntu-22/
 Which allows using the TPU on system python 3.10 eliminating the need for virtual environments for the basic AI,
 although I still strongly recommend using virtual environments since breaking old code has never been much of a consideration for OpenVINO.
@@ -42,5 +42,5 @@ Add the ai user (your login if you didn't use ai as your username at installatio
 Make sure the following command is being done as user, not as sudo -i
 ### sudo adduser $USER render
 Now log out and login or reboot the system. GPU doesn't work if you don't do this!
-Instruction for using CUDA will be given below, but you will still need OpenVINO for the MobilenetSSD_v2 initial AI if not using the Coral TPU, whos instructions are also given below.
+Instructions for using CUDA will be given below, but you will still need OpenVINO for the MobilenetSSD_v2 initial AI if not using the Coral TPU, whos instructions are also given below.
 
