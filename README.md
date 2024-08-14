@@ -26,7 +26,7 @@ Now in a terminl window or your remote shell login, install these extra packages
 ### sudo apt install git curl samba python3-dev python3-pip python3.10-venv espeak mosquitto mosquitto-dev mosquitto-clients cmake
 
 ## 2) Create Python Virtual environment and install the needed python modules
-Note Conda works well too, and I prefer it if you need a dirrerent python version than the system python3 but Conda  has issues veing launched via a shell script via a node-red exec node.  If you know a solution, please send it to me.  I'm not very good with GitHub so you may need to help me with doing "pull requests" if it is not something you can just Email to me.
+Note Conda works well too, and I prefer it if you need a dirrerent python version than the system python3 but Conda  has issues being launched via a shell script via a node-red exec node.  If you know a solution, please send it to me.  I'm not very good with GitHub so you may need to help me with doing "pull requests" if it is not something you can just Email to me.
 Now create a virtual environment to to use with OpenVINO and YOLO8, named y8ovv.
 ### python3 -m venv y8ovv
 Next "activate" the virtual environment:
@@ -66,7 +66,7 @@ rtsp://admin:PassWd@192.168.2.49:554/cam/realmonitor?channel=3&subtype=0  Patio
 rtsp://admin:PaSwrd@192.168.2.196:554/h264Preview_01_main FronYard
 rtsp://192.168.2.77:554/stream0?username=admin&password=CE04588A3231F95BEE71848F5958CF4E BackYard
 ```
-The The IP addresses will be what your router assigns, my example shows two security DVRs at xxx.xxx.xxx.28 and xxx.xxx.xxx.49 and two IP or "netcams" the last netcam generates the password as part of the Onvif setup and can be "tricky" to figure out, but they are not generally unique.  Best way I know to test your RTSP URLs is with VLC and "Open Network" and enter the RTSP URL string.  Main negative of RTSP streams is the latency is typically 2-4 seconds behind "real time".
+The The IP addresses will be what your router assigns, my example shows two security DVRs at xxx.xxx.xxx.28 and xxx.xxx.xxx.49 and two IP or "netcams" the last netcam generates the password as part of the Onvif setup and can be "tricky" to figure out, but they are not generally unique.  Best way I know to test your RTSP URLs is with VLC and "Open Network Connection" and enter the RTSP URL string.  Main negative of RTSP streams is the latency is typically 2-4 seconds behind "real time".
 
 Once the camera URLs are specified (both types of camera files are allowed) we can run a quick test, make sure the virtual environment is active and open up a command window (terminal):
 ```
@@ -137,4 +137,7 @@ restart node red with (remember we stopped it previously):
 And leave the script by typing Ctrl-C in the termainal after the node-red "start-up" messages, then make node-red start automatically with:
 ### sudo systemctl enable nodered.service
 
+If you didn't do this is step 0), do it now to avoid having to edit all the scripts used by node-red exec nodes in the sample controller flow:
+###sudo ln -s /home/YourUserName /home/ai
 
+To install the basic controller, open web browser (Chromium is recommended) and point it at YourHostName:1880 (or localhost:1880 if not installing remotely) and follow through the "Welcome to Node-RED 4.0" steps to see what is new and different from prior versions. When you get the "projects" do "Create Project" and fill in the dialogs.  I chose NO to security and encryption since no external connections are accepted by my firewall, do what works for you.
