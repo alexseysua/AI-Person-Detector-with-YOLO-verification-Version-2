@@ -44,7 +44,7 @@ Make sure the following command is being done as user, not as sudo -i
 Now log out and login or reboot the system. GPU doesn't work if you don't do this!
 Instructions for using CUDA will be given below, but you will still need OpenVINO for the MobilenetSSD_v2 initial AI if not using the Coral TPU, whos instructions are also given below.
 
-### 3) Clone this repo
+## 3) Clone this repo
 Rename the directory to AI2, otherwise you'll need to edit the node-red scripts to account for the different names, then activate the virtual environment:
 ### source y8ovv/bin/activate
 ### cd AI2
@@ -73,7 +73,68 @@ Once the camera URLs are specified (both types of camera files are allowed) we c
 python AI2.py -d
 ```
 This will start a thread for each video camaera and an OpenVINO CPU AI thread and display live results on the screen.  Here is an image of it running on a Lenovo IdeaPad i3 laptop doing six Onvif cameras:
-![IdeaPad](https://github.com/user-attachments/assets/647f3c54-a265-406a-833d-0ef1a2883eec)  Notifications and the housekeeping functions are done with node-red which we will install next.
+![IdeaPad](https://github.com/user-attachments/assets/647f3c54-a265-406a-833d-0ef1a2883eec)  Notifications and the housekeeping functions are done with node-red which we will install next.  Press Ctrl-C in the terminal window to exit the AI python code.
 
+## 4) Install Node-red
+Node-red has a very active and helpful community with lots of good tutorials, a vist to their support forum is recommended: https://discourse.nodered.org/
+
+Exit the Python Virtual environment by typing "deactivate" in the terminal where you ran the AI code test.  Install node-red, choose N for Pi specific modules:
+```
+bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+```
+As the script runs It asks you a few questions, these are my answers:
+```
+would you like to customise the settings now (y/N) ?  Y
+=====================================
+This tool will help you create a Node-RED settings file.
+
+✔ Settings file · /home/ai/.node-red/settings.js
+
+User Security
+=============
+✔ Do you want to setup user security? · No
+
+Projects
+========
+The Projects feature allows you to version control your flow using a local git repository.
+
+✔ Do you want to enable the Projects feature? · Yes
+✔ What project workflow do you want to use? · manual - you must manually commit changes
+
+Editor settings
+===============
+✔ Select a theme for the editor. To use any theme other than "default", you will need to install @node-red-contrib-themes/theme-collection in your Node-RED user directory. · default
+
+✔ Select the text editor component to use in the Node-RED Editor · monaco (default)
+
+Node settings
+=============
+✔ Allow Function nodes to load external modules? (functionExternalModules) · Yes
+
+```
+To complete the node-red setup, in the terminal window do:
+```
+cd $HOME
+node-red-stop
+cd ~/.node-red
+npm i node-red-dashboard node-red-node-email node-red-contrib-image-output node-red-node-base64
+npm install point-in-polygon
+```
+
+Now have to make a minor change to the node-red settings file (should still be in the .node-red hidden directory):
+### sudo nano settings.js
+My "in alert region" node-red filter needs an extra JavaScript module that is not available in node-red by default.
+So must edit .node-red/settings.js and add (around lin 510 on new install 30JUL2024), ^/ will let you jump to line 510
+and edit it to look like this:
+```
+      functionGlobalContext: {
+          insidePolygon:require('point-in-polygon'),
+      }
+```
+Exit nano with: Ctrl-X Y
+restart node red with (remember we stopped it previously):
+### node-red-start
+And leave the script by typing Ctrl-C in the termainal after the node-red "start-up" messages, then make node-red start automatically with:
+### sudo systemctl enable nodered.service
 
 
