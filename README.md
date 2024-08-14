@@ -44,3 +44,27 @@ Make sure the following command is being done as user, not as sudo -i
 Now log out and login or reboot the system. GPU doesn't work if you don't do this!
 Instructions for using CUDA will be given below, but you will still need OpenVINO for the MobilenetSSD_v2 initial AI if not using the Coral TPU, whos instructions are also given below.
 
+### 3) Clone this repo
+Rename the directory to AI2, otherwise you'll need to edit the node-red scripts to account for the different names, then activate the virtual environment:
+### source y8ovv/bin/activate
+### cd AI2
+Next we need to tell the python code how to talk to the cameras. Two types of cameras are supported, Onvif and RTSP.  Onvif is an overly complited "standard" that is rarely implimented fully or correctly but if you can retrieve an image with an HTTP request it is an Onvif camera for our purposes.  RTSP opens a connection on port 554 and returns a video stream, these are the most common type of cameras.  Be aware that RING, SimplySafe, Arlo, Blink etc. don't generally allow direct access to the video streams or still images.  Also the low end securtiy DVRs like Swann, NightOwl also usually lack support for RTSP streams.  Before you buy, make sure the camera or DVRs you are condidering support RTSP streams and or "Onvif snapshots".
+
+To tell the python code how to use your cameras you need to create a cameraURL.txt file for Onvif cameras or a cameraURL.rtsp file for RTSP cameras.  A cameraURL.txt file should one line per camera containing the HTTP URL to retrieve and image and after a space contain the optional name for what the camera is viewing.
+A cameraURL.txt file for two cameras would look like this:
+```
+http://192.168.2.144:85/images/snapshot.jpg Driveway
+http://admin:password@192.168.2.197:80/tmpfs/auto.jpg  Garage
+```
+Note than some cameras don't require any authorization to return the image, others do and the URLs can be very different format.  It is easy to test your URL simpley by entering into a web browser and you should see and image after connecting and a fresh imiage after refreshing the page.
+A cameraURL.rtsp file should look like this:
+```
+rtsp://admin:passwd@192.168.2.28:554/cam/realmonitor?channel=1&subtype=0  MailBox
+rtsp://admin:passwd%@192.168.2.28:554/cam/realmonitor?channel=7&subtype=0  DriveWay
+rtsp://admin:passwd@192.168.2.49:554/cam/realmonitor?channel=3&subtype=0  Garage
+rtsp://admin:PassWd@192.168.2.49:554/cam/realmonitor?channel=3&subtype=0  Patio
+rtsp://admin:PaSwrd@192.168.2.196:554/h264Preview_01_main FronYard
+rtsp://192.168.2.77:554/stream0?username=admin&password=CE04588A3231F95BEE71848F5958CF4E BackYard
+```
+The The IP addresses will be what your router assigns, my example shows two security DVRs at xxx.xxx.xxx.28 and xxx.xxx.xxx.49 and two IP or "netcams" the last netcam generates the password as part of the Onvif setup and can be "tricky" to figure out, but they are not generally unique.
+
