@@ -210,20 +210,22 @@ sudo groupadd apex
 #!!! Make sure the following command is being done as ai user, not as sudo -i
 sudo adduser $USER apex
 ```
-# Now reboot the system.
-# Once rebooted, verify that the accelerator module is detected:
+Now reboot the system.
+Once rebooted, verify that the accelerator module is detected:
 ```
 lspci -nn | grep 089a
 ```
-# You should see something like this:
-# 03:00.0 System peripheral: Device 1ac1:089a
-# The 03 number and System peripheral name might be different, because those are host-system specific, 
-# but as long as you see a device listed with 089a then you're okay to proceed.
-#
-# Also verify that the PCIe driver is loaded:
-### ls /dev/apex_0
-# You should simply see the name repeated back:
-# /dev/apex_0
+You should see something like this:
+03:00.0 System peripheral: Device 1ac1:089a
+The 03 number and System peripheral name might be different, because those are host-system specific, 
+but as long as you see a device listed with 089a then you're okay to proceed.
+
+Also verify that the PCIe driver is loaded:
+```
+ls /dev/apex_0
+```
+You should simply see the name repeated back:
+/dev/apex_0
 
 ## 6)  Setup CUDA, I'm now expert but this is what I did.
 
