@@ -257,7 +257,7 @@ sudo cp -a lib /usr/local/cuda-11.7
 CUDA is like OpenVINO, quite dynamic, so my notes here from about two years ago may not be the best bet now,  I'll happily accept updates to these instructions!
 To launch my AI 
 
-## 7) Some usefy options:
+## 7) Some useful options:
 #### It is best to put AI detections on a seperate drive or USB stick, but not necessary,
 I had to mount the external device to create the /media/ai directory where it will mount,
 then unmount it and do:
