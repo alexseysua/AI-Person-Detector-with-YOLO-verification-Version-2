@@ -59,7 +59,8 @@ A cameraURL.txt file for two cameras would look like this:
 http://192.168.2.144:85/images/snapshot.jpg Driveway
 http://admin:password@192.168.2.197:80/tmpfs/auto.jpg  Garage
 ```
-Note than some cameras don't require any authorization to return the image, others do and the URLs can be very different format.  It is easy to test your URL simpley by entering into a web browser and you should see and image after connecting and a fresh imiage after refreshing the page.
+Note than some cameras don't require any authorization to return the image, others do and the URLs can be very different format.  It is easy to test your URL simpley by entering into a web browser and you should see and image after connecting and a fresh image after refreshing the page.
+
 A cameraURL.rtsp file should look like this:
 ```
 rtsp://admin:passwd@192.168.2.28:554/cam/realmonitor?channel=1&subtype=0  MailBox
