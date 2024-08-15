@@ -258,7 +258,7 @@ CUDA is like OpenVINO, quite dynamic, so my notes here from about two years ago 
 To launch my AI 
 
 ## 7) Some usefy options:
-### It is best to put AI detections on a seperate drive or USB stick, but not necessary,
+#### It is best to put AI detections on a seperate drive or USB stick, but not necessary,
 I had to mount the external device to create the /media/ai directory where it will mount,
 then unmount it and do:
 ```
@@ -267,7 +267,7 @@ sudo mkdir /media/ai/AI
 sudo chown ai.ai /media/ai
 sudo chown ai.ai /media/ai/AI
 ```
-# then edit /etc/fstab so it mounts on bootup:
+#### then edit /etc/fstab so it mounts on bootup:
 ```
 sudo nano /etc/fstab
 ```
@@ -287,7 +287,7 @@ ln -s /media/ai/AI detect
 ```
 Reboot and verify the external drive is mounted.
 
-### I also like to setup a samba server so you can view the detection images from other machines on your local subnet.
+#### I also like to setup a samba server so you can view the detection images from other machines on your local subnet.
 Configue samba file sharing.  Since this is to be an "appliance" this is the best way to look at AI detection files, edit samba config:
 ```
 sudo nano /etc/samba/smb.conf
@@ -312,7 +312,7 @@ Make the homes section be like this:
    create mask = 0775
    directory mask = 0775
 ```
-### set samba password, I use the ai login password for simplicity:
+#### set samba password, I use the ai login password for simplicity:
 ```
 sudo smbpasswd -a ai
 ```
