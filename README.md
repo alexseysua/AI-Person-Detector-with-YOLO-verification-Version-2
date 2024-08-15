@@ -17,37 +17,55 @@ All my Python code, OpenVINO, node-red, Coral TPU drivers (if you need/want them
 
 Use your username where I have "ai" and your hostname where I have "YouSeeX1".
 To avoid having to edit the scripts used by node-red make a sym link in /home:
-### sudo ln -s /home/YourUserName /home/ai
+```
+sudo ln -s /home/YourUserName /home/ai
+```
 
 ## 1) Install needed packages
 I like loging in remotely over via ssh, as running "headless" is a design goal, but it can all be done with a termenal window as well. OpenSSH is not installed by default so either install "OpenSSH" using "Control Center Software Botique" or in a terminal window do:
-### sudo apt install ssh
+```
+sudo apt install ssh
+```
 Now in a terminl window or your remote shell login, install these extra packages with:
-### sudo apt install git curl samba python3-dev python3-pip python3.10-venv espeak mosquitto mosquitto-dev mosquitto-clients cmake
+```
+sudo apt install git curl samba python3-dev python3-pip python3.10-venv espeak mosquitto mosquitto-dev mosquitto-clients cmake
+```
 
 ## 2) Create Python Virtual environment and install the needed python modules
 Note Conda works well too, and I prefer it if you need a dirrerent python version than the system python3 but Conda  has issues being launched via a shell script via a node-red exec node.  If you know a solution, please send it to me.  I'm not very good with GitHub so you may need to help me with doing "pull requests" if it is not something you can just Email to me.
 Now create a virtual environment to to use with OpenVINO and YOLO8, named y8ovv.
-### python3 -m venv y8ovv
+```
+python3 -m venv y8ovv
+```
 Next "activate" the virtual environment:
-### source y8ovv/bin/activate
+```
+source y8ovv/bin/activate
+```
 Note that the prompt changes from: ai@YouSeeX1: to: (y8ovv) ai@YouSeeX1:
 Use pip to install the needed modules:
-### pip install imutils paho-mqtt requests
-### pip install "openvino>=2024.2.0" "nncf>=2.9.0"
-### pip install "torch>=2.1" "torchvision>=0.16" "ultralytics==8.2.24" onnx tqdm opencv-python --extra-index-url https://download.pytorch.org/whl/cpu
+```
+pip install imutils paho-mqtt requests
+pip install "openvino>=2024.2.0" "nncf>=2.9.0"
+pip install "torch>=2.1" "torchvision>=0.16" "ultralytics==8.2.24" onnx tqdm opencv-python --extra-index-url https://download.pytorch.org/whl/cpu
+```
 If not using an Nvidia GPU and Cuda install the Intel GPU driver:
-### sudo apt-get install intel-opencl-icd
+```
+sudo apt-get install intel-opencl-icd
+```
 Add the ai user (your login if you didn't use ai as your username at installation) to the render group:
 Make sure the following command is being done as user, not as sudo -i
-### sudo adduser $USER render
+```
+sudo adduser $USER render
+```
 Now log out and login or reboot the system. GPU doesn't work if you don't do this!
 Instructions for using CUDA will be given below, but you will still need OpenVINO for the MobilenetSSD_v2 initial AI if not using the Coral TPU, whos instructions are also given below.
 
 ## 3) Clone this repo
 Rename the directory to AI2, otherwise you'll need to edit the node-red scripts to account for the different names, then activate the virtual environment:
-### source y8ovv/bin/activate
-### cd AI2
+```
+source y8ovv/bin/activate
+cd AI2
+```
 Next we need to tell the python code how to talk to the cameras. Two types of cameras are supported, Onvif and RTSP.  Onvif is an overly complited "standard" that is rarely implimented fully or correctly but if you can retrieve an image with an HTTP request it is an Onvif camera for our purposes.  RTSP opens a connection on port 554 and returns a video stream, these are the most common type of cameras.  Be aware that RING, SimplySafe, Arlo, Blink etc. don't generally allow direct access to the video streams or still images.  Also the low end securtiy DVRs like Swann, NightOwl also usually lack support for RTSP streams.  Before you buy, make sure the camera or DVRs you are condidering support RTSP streams and or "Onvif snapshots".
 
 NOTE.  The models are too large to upload to GitHub and for some it may not be allowed.  The Ultralytics yolo8 model is automatically downloaded and converted to openvino format if the files are not there already.  But the MobilnetSSDv2 for the TPU and openvino are not.  You can download the TPU model from:  https://raw.githubusercontent.com/google-coral/test_data/master/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite put it in the AI2/mobilenet_ssd_v2 folder, the coco_labels.txt should already be there.  For the openvino SSD model I converted it using openvino 2021.3 using this guide: https://medium.com/@runeskovrup/object-detection-using-openvino-58b8fe6efbda but it is too old now and has some broken links.  I'm currently looking for a better solution, the 2024 openvino has a lot of model conversions built in, I just need to find the original model source and go up the learning curve to convert it to openvino format for the CPU.
@@ -126,7 +144,9 @@ npm install point-in-polygon
 ```
 
 Now have to make a minor change to the node-red settings file (should still be in the .node-red hidden directory):
-### sudo nano settings.js
+```
+sudo nano settings.js
+```
 My "in alert region" node-red filter needs an extra JavaScript module that is not available in node-red by default.
 So must edit .node-red/settings.js and add (around lin 510 on new install 30JUL2024), ^/ will let you jump to line 510
 and edit it to look like this:
@@ -137,12 +157,18 @@ and edit it to look like this:
 ```
 Exit nano with: Ctrl-X Y
 restart node red with (remember we stopped it previously):
-### node-red-start
+```
+node-red-start
+```
 And leave the script by typing Ctrl-C in the termainal after the node-red "start-up" messages, then make node-red start automatically with:
-### sudo systemctl enable nodered.service
+```
+sudo systemctl enable nodered.service
+```
 
 If you didn't do this is step 0), do it now to avoid having to edit all the scripts used by node-red exec nodes in the sample controller flow:
-### sudo ln -s /home/YourUserName /home/ai
+```
+sudo ln -s /home/YourUserName /home/ai
+```
 
 To install the basic controller, open web browser (Chromium is recommended) and point it at YourHostName:1880 (or localhost:1880 if not installing remotely) and follow through the "Welcome to Node-RED 4.0" steps to see what is new and different from prior versions. When you get the "projects" do "Create Project" and fill in the dialogs.  I chose NO to security and encryption since no external connections are accepted by my firewall, do what works for you.
 
@@ -186,7 +212,9 @@ sudo adduser $USER apex
 ```
 # Now reboot the system.
 # Once rebooted, verify that the accelerator module is detected:
-### lspci -nn | grep 089a
+```
+lspci -nn | grep 089a
+```
 # You should see something like this:
 # 03:00.0 System peripheral: Device 1ac1:089a
 # The 03 number and System peripheral name might be different, because those are host-system specific, 
