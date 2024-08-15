@@ -230,5 +230,26 @@ You should simply see the name repeated back:
 /dev/apex_0
 
 ## 6)  Setup CUDA, I'm no expert, but this is what I did.
-
-
+I think it is safest to use the Ubuntu repo version of the nvidia driver and install cuda from downloaded Nvidia deb file.
+Install the cuda toolkit:
+```
+sudo apt install nvidia-cuda-toolkit
+```
+Download from the NVidia site: cuda-repo-ubuntu2204-11-7-local_11.7.1-515.65.01-1_amd64.deb
+Note that this depends on the Nvidia driver you've installed, I used 510.108.03 which is not the "latest", but when I did
+it on a "virgin" system it seemed to installed driver 515.105.01, which required a reboot for nvidia-smi to work
+```
+sudo dpkg -i Downloads/cuda-repo-ubuntu2204-11-7-local_11.7.1-515.65.01-1_amd64.deb
+sudo cp /var/cuda-repo-ubuntu2204-11-7-local/cuda-F83D2C4C-keyring.gpg /usr/share/keyrings/
+sudo apt update
+sudo apt-get -y install cuda
+```
+Next install the CUDNN:
+Download: cudnn-linux-x86_64-8.4.1.50_cuda11.6-archive.tar.xz from Nvidia site,
+Extract the archive from the file manager and copy the include and lib directories to /usr/local
+```
+cd Downloads/cudnn-linux-x86_64-8.4.1.50_cuda11.6-archive
+sudo mkdir /usr/local/cuda-11.7
+sudo cp -a include /usr/local/cuda-11.7
+sudo cp -a lib /usr/local/cuda-11.7
+```
