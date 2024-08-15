@@ -142,6 +142,61 @@ And leave the script by typing Ctrl-C in the termainal after the node-red "start
 ### sudo systemctl enable nodered.service
 
 If you didn't do this is step 0), do it now to avoid having to edit all the scripts used by node-red exec nodes in the sample controller flow:
-###sudo ln -s /home/YourUserName /home/ai
+### sudo ln -s /home/YourUserName /home/ai
 
 To install the basic controller, open web browser (Chromium is recommended) and point it at YourHostName:1880 (or localhost:1880 if not installing remotely) and follow through the "Welcome to Node-RED 4.0" steps to see what is new and different from prior versions. When you get the "projects" do "Create Project" and fill in the dialogs.  I chose NO to security and encryption since no external connections are accepted by my firewall, do what works for you.
+
+Open the node-red "Hamburger" (three parallel bars) menu in the upper right corner of the editor and select "Import".  Press the "new flow" buton in the dialog box click the "select a file to import" button.  Navigate to the BasicAI2Controller.json. file.  Afterwards, click the Deploy button and you should be ready to go.  you'll have to set up the Email addresses in the "Setup Email" node and set up your smtp Email account credentials in the "Email Notification" node.
+
+## 5) Setup to use the Coral TPU
+Add the "current" coral repo:
+```
+echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo apt update
+sudo apt install libedgetpu1-std
+```
+If you want TPU to run full speed:
+```
+sudo apt install libedgetpu1-max
+```
+
+If you want to use the M.2, mPCIe, etc. TPUs:
+Depending on when and where you install you can get different kernel versions.
+Virgin install on 1AUG2024 on Celeron got: 6.5.0-45-generic #45~22.04.1-Ubuntu
+on my i9 setup in 2022 I got: 5.15.0-113-generic #123-Ubuntu
+Don't install this if you have v6 kernel but it is not fatal, can "sudo apt remove" it later if necessary.
+```
+sudo apt install gasket-dkms
+```
+NOTE: the dkms build fails on kernel v6.+ what worked to fix it:
+```
+sudo apt remove gasket-dkms     # only if you did apt install gasket-dms on v6+ kernel
+sudo apt install devscripts debhelper -y
+git clone https://github.com/google/gasket-driver.git
+cd gasket-driver; debuild -us -uc -tc -b; cd ..
+sudo dpkg -i gasket-dkms_1.0-18_all.deb
+```
+Next setup the apex user and verify the PCI-E installation:
+```
+sudo sh -c "echo 'SUBSYSTEM==\"apex\", MODE=\"0660\", GROUP=\"apex\"' >> /etc/udev/rules.d/65-apex.rules"
+sudo groupadd apex
+#!!! Make sure the following command is being done as ai user, not as sudo -i
+sudo adduser $USER apex
+```
+# Now reboot the system.
+# Once rebooted, verify that the accelerator module is detected:
+### lspci -nn | grep 089a
+# You should see something like this:
+# 03:00.0 System peripheral: Device 1ac1:089a
+# The 03 number and System peripheral name might be different, because those are host-system specific, 
+# but as long as you see a device listed with 089a then you're okay to proceed.
+#
+# Also verify that the PCIe driver is loaded:
+### ls /dev/apex_0
+# You should simply see the name repeated back:
+# /dev/apex_0
+
+## 6)  Setup CUDA, I'm now expert but this is what I did.
+
+
