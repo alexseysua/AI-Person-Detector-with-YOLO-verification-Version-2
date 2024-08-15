@@ -71,6 +71,13 @@ chmod ugo+x *.sh
 Next we need to tell the python code how to talk to the cameras. Two types of cameras are supported, Onvif and RTSP.  Onvif is an overly complited "standard" that is rarely implimented fully or correctly but if you can retrieve an image with an HTTP request it is an Onvif camera for our purposes.  RTSP opens a connection on port 554 and returns a video stream, these are the most common type of cameras.  Be aware that RING, SimplySafe, Arlo, Blink etc. don't generally allow direct access to the video streams or still images.  Also the low end securtiy DVRs like Swann, NightOwl also usually lack support for RTSP streams.  Before you buy, make sure the camera or DVRs you are condidering support RTSP streams and or "Onvif snapshots".
 
 NOTE.  The models are too large to upload to GitHub and for some it may not be allowed.  The Ultralytics yolo8 model is automatically downloaded and converted to openvino format if the files are not there already.  But the MobilnetSSDv2 for the TPU and openvino are not.  You can download the TPU model from:  https://raw.githubusercontent.com/google-coral/test_data/master/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite put it in the AI2/mobilenet_ssd_v2 folder, the coco_labels.txt should already be there.  For the openvino SSD model I converted it using openvino 2021.3 using this guide: https://medium.com/@runeskovrup/object-detection-using-openvino-58b8fe6efbda but it is too old now and has some broken links.  I'm currently looking for a better solution, the 2024 openvino has a lot of model conversions built in, I just need to find the original model source and go up the learning curve to convert it to openvino format for the CPU.
+15AUG2024  I found the original MobilenetSSD_v2_coco model I converted with openvino 2021.3, I'm working on converting it with openvino 2024.2 (or newer, 2024.3 just came out a few days ago).
+```
+#Download SSD MobileNet V2 model
+wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz
+tar -zxf ssd_mobilenet_v2_coco_2018_03_29.tar.gz
+```
+The file to be converted is: frozen_inference_graph.pb
 
 
 To tell the python code how to use your cameras you need to create a cameraURL.txt file for Onvif cameras or a cameraURL.rtsp file for RTSP cameras.  A cameraURL.txt file should one line per camera containing the HTTP URL to retrieve and image and after a space contain the optional name for what the camera is viewing.
