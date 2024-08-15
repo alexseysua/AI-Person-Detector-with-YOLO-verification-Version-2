@@ -174,7 +174,8 @@ sudo ln -s /home/YourUserName /home/ai
 
 To install the basic controller, open web browser (Chromium is recommended) and point it at YourHostName:1880 (or localhost:1880 if not installing remotely) and follow through the "Welcome to Node-RED 4.0" steps to see what is new and different from prior versions. When you get the "projects" do "Create Project" and fill in the dialogs.  I chose NO to security and encryption since no external connections are accepted by my firewall, do what works for you.
 
-Open the node-red "Hamburger" (three parallel bars) menu in the upper right corner of the editor and select "Import".  Press the "new flow" buton in the dialog box click the "select a file to import" button.  Navigate to the BasicAI2Controller.json. file.  Afterwards, click the Deploy button and you should be ready to go.  you'll have to set up the Email addresses in the "Setup Email" node and set up your smtp Email account credentials in the "Email Notification" node.
+Open the node-red "Hamburger" (three parallel bars) menu in the upper right corner of the editor and select "Import".  Press the "new flow" buton in the dialog box click the "select a file to import" button.  Navigate to the BasicAI2Controller.json. file.  Afterwards, click the Deploy button and you should be ready to go.  you'll have to set up the Email addresses in the "Setup Email" node and set up your smtp Email account credentials in the "Email Notification" node.  You will also have to edit the AI2/StartAI.sh file to use the correct options to start the AI2 Python code, hopefully the comments in the file help guide you.
+
 
 ## 5) Setup to use the Coral TPU
 Add the "current" coral repo:
@@ -253,3 +254,66 @@ sudo mkdir /usr/local/cuda-11.7
 sudo cp -a include /usr/local/cuda-11.7
 sudo cp -a lib /usr/local/cuda-11.7
 ```
+CUDA is like OpenVINO, quite dynamic, so my notes here from about two years ago may not be the best bet now,  I'll happily accept updates to these instructions!
+To launch my AI 
+
+## 7) Some usefy options:
+### It is best to put AI detections on a seperate drive or USB stick, but not necessary,
+I had to mount the external device to create the /media/ai directory where it will mount,
+then unmount it and do:
+```
+sudo mkdir /media/ai
+sudo mkdir /media/ai/AI
+sudo chown ai.ai /media/ai
+sudo chown ai.ai /media/ai/AI
+```
+# then edit /etc/fstab so it mounts on bootup:
+```
+sudo nano /etc/fstab
+```
+Add entry like this, changing /dev and mount point as desired (here AI is the drive's ext4 label name)
+Note tgat /dev/sda1 is usually the name of a USB stick for Linux system on eEMC, SD card or NVMe drive, but not always
+Hint, use the Linux "Disks" utility programe to get the device name of the partition to mount.
+```
+# My YouSeeToo-X1 system is booting from eEMC and using NVMe drive to store images:
+/dev/nvme0n1p1 /media/ai/AI	ext4	defaults,nofail,noatime	0	3
+# For a USB stick
+/dev/sdb1	/media/ai/AI	ext4	defaults,nofail,noatime	0	3
+```
+Then make a symlink in /home/ai:
+```
+cd $HOME
+ln -s /media/ai/AI detect
+```
+Reboot and verify the external drive is mounted.
+
+### I also like to setup a samba server so you can view the detection images from other machines on your local subnet.
+Configue samba file sharing.  Since this is to be an "appliance" this is the best way to look at AI detection files, edit samba config:
+```
+sudo nano /etc/samba/smb.conf
+```
+Add this is in the [global] section:
+```
+    mangled names = no
+    follow symlinks = yes
+    wide links = yes
+    unix extensions = no
+    # Ubuntu 20.04 seems to require these:
+    server min protocol = NT1
+    client min protocol = NT1
+```
+Make the homes section be like this:
+```
+[homes]
+   comment = Home Directories
+   browseable = yes
+   read only = no
+   writeable = yes
+   create mask = 0775
+   directory mask = 0775
+```
+### set samba password, I use the ai login password for simplicity:
+```
+sudo smbpasswd -a ai
+```
+
