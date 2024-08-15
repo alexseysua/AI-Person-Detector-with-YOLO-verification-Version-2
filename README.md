@@ -65,6 +65,8 @@ Rename the directory to AI2, otherwise you'll need to edit the node-red scripts 
 ```
 source y8ovv/bin/activate
 cd AI2
+# make sure the five *.sh scripts have the execute bit set.
+chmod ugo+x *.sh
 ```
 Next we need to tell the python code how to talk to the cameras. Two types of cameras are supported, Onvif and RTSP.  Onvif is an overly complited "standard" that is rarely implimented fully or correctly but if you can retrieve an image with an HTTP request it is an Onvif camera for our purposes.  RTSP opens a connection on port 554 and returns a video stream, these are the most common type of cameras.  Be aware that RING, SimplySafe, Arlo, Blink etc. don't generally allow direct access to the video streams or still images.  Also the low end securtiy DVRs like Swann, NightOwl also usually lack support for RTSP streams.  Before you buy, make sure the camera or DVRs you are condidering support RTSP streams and or "Onvif snapshots".
 
@@ -227,6 +229,6 @@ ls /dev/apex_0
 You should simply see the name repeated back:
 /dev/apex_0
 
-## 6)  Setup CUDA, I'm now expert but this is what I did.
+## 6)  Setup CUDA, I'm no expert, but this is what I did.
 
 
