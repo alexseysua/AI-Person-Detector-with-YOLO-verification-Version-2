@@ -2,7 +2,7 @@
 This is "Version 2" of the repo: https://github.com/wb666greene/AI-Person-Detector-with-YOLO-Verification
 
 These are my notes for a virgin installation of Ubuntu 22.04 and installation of OpenVINO 2024 release 
-for using Intel integrated GPU for yolo verification.  Motivated by 
+for using Intel integrated GPU or Nvidia GPU for yolo verification.  Motivated by 
 https://igor.technology/installing-coral-usb-accelearator-python-3-10-ubuntu-22/
 Which allows using the TPU on system python 3.10 eliminating the need for virtual environments for the basic AI,
 although I still strongly recommend using virtual environments since breaking old code has never been much of a consideration for OpenVINO.
@@ -238,6 +238,8 @@ Open the node-red "Hamburger" (three parallel bars) menu in the upper right corn
 
 
 ## 5) Setup to use the Coral TPU
+NOTE: on my i9-12900 I get ~42 frames per second vor MobilenetSSD_v2 with both OpenVINO CPU and Coral TPU.  It is on lessor hardware, like i3, where the TPU is well worth its modest cost.
+
 Add the "current" coral repo:
 ```
 echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
