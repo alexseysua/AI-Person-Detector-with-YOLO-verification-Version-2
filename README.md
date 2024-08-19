@@ -32,8 +32,10 @@ sudo apt install git curl samba python3-dev python3-pip python3.10-venv espeak m
 ```
 
 ## 2) Create Python Virtual environment and install the needed python modules
-Note Conda works well too, and I prefer it if you need a dirrerent python version than the system python3 but Conda  has issues being launched via a shell script via a node-red exec node.  If you know a solution, please send it to me.  I'm not very good with GitHub so you may need to help me with doing "pull requests" if it is not something you can just Email to me.
-Now create a virtual environment to to use with OpenVINO and YOLO8, named y8ovv.
+Note Conda works well too, and I prefer it if you need a different python version than the system python3, but Conda  has issues being launched via a shell script via a node-red exec node.  If you know a solution, please send it to me.  I'm not very good with GitHub so you may need to help me with doing "pull requests" if it is not something you can just Email to me.
+
+### Create a virtual environment to to use with OpenVINO and YOLO8, named y8ovv.
+NOTE: If using CUDA skip to the section below and create a venv named y8cuda.  I had conflicts trying to get both OpenVINO iGPU and CUDA working in the same environment.  It is not really a big limitation as it seems that CUDA and OpenCL can't both be used at the same time for GPU support.
 ```
 python3 -m venv y8ovv
 ```
@@ -48,7 +50,7 @@ pip install imutils paho-mqtt requests
 pip install "openvino>=2024.2.0" "nncf>=2.9.0"
 pip install "torch>=2.1" "torchvision>=0.16" "ultralytics==8.2.24" onnx tqdm opencv-python --extra-index-url https://download.pytorch.org/whl/cpu
 ```
-If not using an Nvidia GPU and Cuda install the Intel GPU driver:
+Install the Intel GPU driver:
 ```
 sudo apt-get install intel-opencl-icd
 ```
@@ -60,16 +62,59 @@ sudo adduser $USER render
 Now log out and login or reboot the system. GPU doesn't work if you don't do this!
 Instructions for using CUDA will be given below, but you will still need OpenVINO for the MobilenetSSD_v2 initial AI if not using the Coral TPU, whos instructions are also given below.
 
+### Install CUDA and create virtual environment:
+First install cuda. I'm not a cuda expert, this is what I installed on my i9-12900 development system with RTX3070.
+Get the latest PyTorch here: https://pytorch.org/get-started/locally/
+Older versions (what I used): https://pytorch.org/get-started/previous-versions/
+The websites give you a pip install command you can cut and paste to install your version of torch with cuda support.
+
+### Setup CUDA:
+I think it is safest to use the Ubuntu repo version of the nvidia driver and install cuda from downloaded Nvidia deb file.
+Install the cuda toolkit:
+```
+sudo apt install nvidia-cuda-toolkit
+```
+Download from the NVidia site: cuda-repo-ubuntu2204-11-7-local_11.7.1-515.65.01-1_amd64.deb
+Note that this depends on the Nvidia driver you've installed, I used 510.108.03 which is not the "latest", but when I did
+it on a "virgin" system it seemed to installed driver 515.105.01, which required a reboot for nvidia-smi to work
+```
+sudo dpkg -i Downloads/cuda-repo-ubuntu2204-11-7-local_11.7.1-515.65.01-1_amd64.deb
+sudo cp /var/cuda-repo-ubuntu2204-11-7-local/cuda-F83D2C4C-keyring.gpg /usr/share/keyrings/
+sudo apt update
+sudo apt-get -y install cuda
+```
+Next install the CUDNN:
+Download: cudnn-linux-x86_64-8.4.1.50_cuda11.6-archive.tar.xz from Nvidia site,
+Extract the archive from the file manager and copy the include and lib directories to /usr/local
+```
+cd Downloads/cudnn-linux-x86_64-8.4.1.50_cuda11.6-archive
+sudo mkdir /usr/local/cuda-11.7
+sudo cp -a include /usr/local/cuda-11.7
+sudo cp -a lib /usr/local/cuda-11.7
+```
+CUDA is like OpenVINO, quite dynamic, so my notes here from about two years ago may not be the best bet now,  I'll happily accept updates to these instructions!
+### Make the virtual environment for CUDA:
+```
+python3 -m venv y8cuda
+source y8cuda/bin/activate
+# promp changes to: (y8cuda)
+pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
+pip install TPU_python3.10/tflite_runtime-2.5.0.post1-cp310-cp310-linux_x86_64.whl
+pip install TPU_python3.10/pycoral-2.0.0-cp310-cp310-linux_x86_64.whl
+pip install imutils paho-mqtt requests
+pip install opencv-python
+pip install "openvino>=2024.2.0" "nncf>=2.9.0"
+pip install ultralytics
+```
+
 ## 3) Clone this repo
 Rename the directory to AI2, otherwise you'll need to edit the node-red scripts to account for the different names, then activate the virtual environment:
 ```
-source y8ovv/bin/activate
+source y8ovv/bin/activate  # or source y8cuda/bin/activate if using cuda
 cd AI2
 # make sure the five *.sh scripts have the execute bit set.
 chmod ugo+x *.sh
 ```
-Next we need to tell the python code how to talk to the cameras. Two types of cameras are supported, Onvif and RTSP.  Onvif is an overly complited "standard" that is rarely implimented fully or correctly but if you can retrieve an image with an HTTP request it is an Onvif camera for our purposes.  RTSP opens a connection on port 554 and returns a video stream, these are the most common type of cameras.  Be aware that RING, SimplySafe, Arlo, Blink etc. don't generally allow direct access to the video streams or still images.  Also the low end securtiy DVRs like Swann, NightOwl also usually lack support for RTSP streams.  Before you buy, make sure the camera or DVRs you are condidering support RTSP streams and or "Onvif snapshots".
-
 NOTE.  The models are too large to upload to GitHub and for some it may not be allowed.  The Ultralytics yolo8 model is automatically downloaded and converted to openvino format if the files are not there already.  But the MobilnetSSDv2 for the TPU and openvino are not.  You can download the TPU model from:  https://raw.githubusercontent.com/google-coral/test_data/master/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite put it in the AI2/mobilenet_ssd_v2 folder, the coco_labels.txt should already be there.  For the openvino SSD model I converted it using openvino 2021.3 using this guide: https://medium.com/@runeskovrup/object-detection-using-openvino-58b8fe6efbda but it is too old now and has some broken links.  I'm currently looking for a better solution, the 2024 openvino has a lot of model conversions built in, I just need to find the original model source and go up the learning curve to convert it to openvino format for the CPU.
 15AUG2024  I found the original MobilenetSSD_v2_coco model I converted with openvino 2021.3, I'm working on converting it with openvino 2024.2 (or newer, 2024.3 just came out a few days ago).
 ```
@@ -79,6 +124,8 @@ tar -zxf ssd_mobilenet_v2_coco_2018_03_29.tar.gz
 ```
 The file to be converted is: frozen_inference_graph.pb
 
+
+Next we need to tell the python code how to talk to the cameras. Two types of cameras are supported, Onvif and RTSP.  Onvif is an overly complited "standard" that is rarely implimented fully or correctly but if you can retrieve an image with an HTTP request it is an Onvif camera for our purposes.  RTSP opens a connection on port 554 and returns a video stream, these are the most common type of cameras.  Be aware that RING, SimplySafe, Arlo, Blink etc. don't generally allow direct access to the video streams or still images.  Also the low end securtiy DVRs like Swann, NightOwl also usually lack support for RTSP streams.  Before you buy, make sure the camera or DVRs you are condidering support RTSP streams and or "Onvif snapshots".
 
 To tell the python code how to use your cameras you need to create a cameraURL.txt file for Onvif cameras or a cameraURL.rtsp file for RTSP cameras.  A cameraURL.txt file should one line per camera containing the HTTP URL to retrieve and image and after a space contain the optional name for what the camera is viewing.
 A cameraURL.txt file for two cameras would look like this:
@@ -101,7 +148,13 @@ The The IP addresses will be what your router assigns, my example shows two secu
 
 Once the camera URLs are specified (both types of camera files are allowed) we can run a quick test, make sure the virtual environment is active and open up a command window (terminal):
 ```
-python AI2.py -d
+source y8ovv/bin/activate
+python AI2.py -d -y8ovv
+```
+Or if using cuda:
+```
+source y8cuda/bin/activate
+python AI2.py -d -y8v
 ```
 This will start a thread for each video camaera and an OpenVINO CPU AI thread and display live results on the screen.  Here is an image of it running on a Lenovo IdeaPad i3 laptop doing six Onvif cameras:
 ![IdeaPad](https://github.com/user-attachments/assets/647f3c54-a265-406a-833d-0ef1a2883eec)  Notifications and the housekeeping functions are done with node-red which we will install next.  Press Ctrl-C in the terminal window to exit the AI python code.
@@ -237,34 +290,8 @@ ls /dev/apex_0
 You should simply see the name repeated back:
 /dev/apex_0
 
-## 6)  Setup CUDA, I'm no expert, but this is what I did.
-I think it is safest to use the Ubuntu repo version of the nvidia driver and install cuda from downloaded Nvidia deb file.
-Install the cuda toolkit:
-```
-sudo apt install nvidia-cuda-toolkit
-```
-Download from the NVidia site: cuda-repo-ubuntu2204-11-7-local_11.7.1-515.65.01-1_amd64.deb
-Note that this depends on the Nvidia driver you've installed, I used 510.108.03 which is not the "latest", but when I did
-it on a "virgin" system it seemed to installed driver 515.105.01, which required a reboot for nvidia-smi to work
-```
-sudo dpkg -i Downloads/cuda-repo-ubuntu2204-11-7-local_11.7.1-515.65.01-1_amd64.deb
-sudo cp /var/cuda-repo-ubuntu2204-11-7-local/cuda-F83D2C4C-keyring.gpg /usr/share/keyrings/
-sudo apt update
-sudo apt-get -y install cuda
-```
-Next install the CUDNN:
-Download: cudnn-linux-x86_64-8.4.1.50_cuda11.6-archive.tar.xz from Nvidia site,
-Extract the archive from the file manager and copy the include and lib directories to /usr/local
-```
-cd Downloads/cudnn-linux-x86_64-8.4.1.50_cuda11.6-archive
-sudo mkdir /usr/local/cuda-11.7
-sudo cp -a include /usr/local/cuda-11.7
-sudo cp -a lib /usr/local/cuda-11.7
-```
-CUDA is like OpenVINO, quite dynamic, so my notes here from about two years ago may not be the best bet now,  I'll happily accept updates to these instructions!
-To launch my AI 
 
-## 7) Some useful options:
+## 6) Some useful options:
 #### It is best to put AI detections on a seperate drive or USB stick, but not necessary,
 I had to mount the external device to create the /media/ai directory where it will mount,
 then unmount it and do:
