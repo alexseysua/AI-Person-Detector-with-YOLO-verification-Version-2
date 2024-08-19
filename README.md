@@ -13,7 +13,7 @@ I used Ubuntu-Mate.  Customize it as you see fit.
 
 If you are new to Linux, first thing after installing Ubuntu-Mate, go through the "Welcome" tutorial to learn the basics and then go to the "Control Center" and open "MATE Tweak" and from the sidebar select "Panel".  If you choose "Redmon" from the dropdown you'll get a destop that resembles Windows, if you choose "Cupetino" you'll get a Mac-like desktop.  If you can tolerate the Ubuntu "Unity" Desktop, fine, but I can't, and if coming from Windows or Mac be prepared for "eveything you know is wrong" when it comes to using the desktop UI.
 
-All my Python code, OpenVINO, node-red, Coral TPU drivers (if you need/want them) and CUDA (if you are using nVidia GPU instead of Intel) should be available on Windows, but I've not tested it.  But you'll lose the "housekeeping" functionality in some shell scripts that are called via node-red exec nodes in my minimal webbased "controller".  Minimal is a design feature, I wanted a "set and forget" appliance that runs 24/7/365 and is controlled by your "home automation" or a web browser to set one of three modes of operation.  "Notify" mode send Email alerts,  "Audio" uses "Espeak" speech synthsizer to announce what camera a person has been detected on, and Idle just saves detection without any nodifications.  If you manage to run it on Windows please submit your instructions so I can add them here.
+All my Python code, OpenVINO, node-red, Coral TPU drivers (if you need/want them) and CUDA (if you are using nVidia GPU instead of Intel) should be available on Windows, but I've not tested it.  But you'll lose the "housekeeping" functionality in some shell scripts that are called via node-red exec nodes in my minimal webbased "controller".  Minimal is a design feature, I wanted a "set and forget" appliance that runs 24/7/365 and is controlled by your "home automation" or a web browser to set one of three modes of operation.  "Notify" mode sends Email and audio alerts,  "Audio" uses "Espeak" speech synthsizer to announce what camera a person has been detected on, and Idle just saves detection without any nodifications.  If you manage to run it on Windows please submit your instructions so I can add them here.
 
 Use your username where I have "ai" and your hostname where I have "YouSeeX1".
 To avoid having to edit the scripts used by node-red make a sym link in /home:
@@ -34,8 +34,8 @@ sudo apt install git curl samba python3-dev python3-pip python3.10-venv espeak m
 ## 2) Create Python Virtual environment and install the needed python modules
 Note Conda works well too, and I prefer it if you need a different python version than the system python3, but Conda  has issues being launched via a shell script via a node-red exec node.  If you know a solution, please send it to me.  I'm not very good with GitHub so you may need to help me with doing "pull requests" if it is not something you can just Email to me.
 
-### Create a virtual environment to to use with OpenVINO and YOLO8, named y8ovv.
-NOTE: If using CUDA skip to the section below and create a venv named y8cuda.  I had conflicts trying to get both OpenVINO iGPU and CUDA working in the same environment.  It is not really a big limitation as it seems that CUDA and OpenCL can't both be used at the same time for GPU support.
+### 2a) Create a virtual environment to to use with OpenVINO and YOLO8, named y8ovv.
+NOTE: If using CUDA skip to the section below and create a venv named y8cuda.  I had conflicts trying to get both OpenVINO iGPU and CUDA working in the same environment.  It is not really a big limitation as it seems that CUDA and OpenCL can't both be used at the same time for GPU acceleration.
 ```
 python3 -m venv y8ovv
 ```
@@ -62,7 +62,7 @@ sudo adduser $USER render
 Now log out and login or reboot the system. GPU doesn't work if you don't do this!
 Instructions for using CUDA will be given below, but you will still need OpenVINO for the MobilenetSSD_v2 initial AI if not using the Coral TPU, whos instructions are also given below.
 
-### Install CUDA and create virtual environment:
+### 2b) Install CUDA and create virtual environment:
 First install cuda. I'm not a cuda expert, this is what I installed on my i9-12900 development system with RTX3070.
 Get the latest PyTorch here: https://pytorch.org/get-started/locally/
 Older versions (what I used): https://pytorch.org/get-started/previous-versions/
