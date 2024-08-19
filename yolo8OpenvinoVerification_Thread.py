@@ -54,6 +54,7 @@ def yolo8ov_thread(resultsQ, yoloQ):
 
     det_model = YOLO(models_dir / f"{__y8modelSTR__}.pt")
     label_map = det_model.model.names
+    ###res = det_model('TestDetection.jpg', conf=__verifyConf__-0.001, verbose=True)    #Useful verify iGPU is being used and get rough idea of inference time.
     res = det_model('TestDetection.jpg', conf=__verifyConf__-0.001, verbose=False)    #Dummy inference to initialize object, better way?  But this works!
     # object detection model  export to OpenVINO format
     det_model_path = models_dir / f"{__y8modelSTR__}_openvino_model/{__y8modelSTR__}.xml"
@@ -126,7 +127,7 @@ def yolo8ov_thread(resultsQ, yoloQ):
                 # draw the verification confidence onto the ssd_frame
                 yoloVerified+=1
                 text = "Yolo8ov: {:.1f}%".format(detectConfidence * 100)   # show verification confidence on detection image
-                cv2.putText(ssd_frame, text, (2, 56), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
+                cv2.putText(ssd_frame, text, (2, 56), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 200, 200), 2)
                 if resultsQ.full():
                     [_,_,_,_,_,_,_]=resultsQ.get(False)  # remove oldest result 
                     dcnt+=1                       

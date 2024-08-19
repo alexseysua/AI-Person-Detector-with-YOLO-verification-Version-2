@@ -26,7 +26,7 @@ global __VERIY_DIMS__
 __VERIFY_DIMS__ = (300,300)
 
 global __Color__
-__Color__ = (0, 225, 225)
+__Color__ = (0, 200, 200)
 
 
 ## *** OpenVINO 2024 CPU SSD AI Thread ***

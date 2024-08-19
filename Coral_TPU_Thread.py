@@ -21,7 +21,7 @@ global __DEBUG__
 __DEBUG__ = False
 
 global __Color__
-__Color__ = (0, 225, 225)
+__Color__ = (0, 200, 200)
 
 
 try:

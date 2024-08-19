@@ -19,6 +19,8 @@ import datetime
 from imutils.video import FPS
 import cv2
 
+###import torch
+
 
 global __Thread__
 __Thread__ = False
@@ -32,7 +34,7 @@ __y8modelSTR__ = 'yolo8/yolov8x.pt'
 global model
 
 global __Color__
-__Color__ = (0, 225, 225)
+__Color__ = (0, 200, 200)
 
 
 '''
@@ -56,6 +58,7 @@ def do_inference( image, model,  confidence ):
     detectConfidence = 0.0
     # call code to do an inference
     results = model.predict(image, conf=confidence-0.001, verbose=False)
+    ###results = model.predict(image, conf=confidence-0.001, verbose=True) # debug to verify using CUDA by inference time.
     # Visualize the results on the image
     annotated_image = results[0].plot(line_width=1, labels=False)
     for result in results:
