@@ -1,19 +1,21 @@
 # AI-Person-Detector-with-YOLO-verification-Version-2
-This is "Version 2" of the repo: https://github.com/wb666greene/AI-Person-Detector-with-YOLO-Verification
+This is "Version 2" of the repo: https://github.com/wb666greene/AI-Person-Detector-with-YOLO-Verification.  The major difference is a much easier install since nearly everything can be done with PIP and a python virtual environment.  All the support for old hardware not capable of running yolo8 has been removed, since yolo8 is the key to the very low false alert rate.  I've tested it on Ubuntu 20.04 and 22.04, other Linux distributions with openvino and/or cuda support should work.
 
-These are my notes for a virgin installation of Ubuntu 22.04 and installation of OpenVINO 2024 release 
+These are my notes for a virgin installation of Ubuntu 22.04 and installation of OpenVINO 2024.3 release 
 for using Intel integrated GPU or Nvidia GPU for yolo verification.  Motivated by 
 https://igor.technology/installing-coral-usb-accelearator-python-3-10-ubuntu-22/
 Which allows using the TPU on system python 3.10 eliminating the need for virtual environments for the basic AI,
 although I still strongly recommend using virtual environments since breaking old code has never been much of a consideration for OpenVINO.
 
+Here is an image sequence that shows the software in action, made from the detection images as a solicitor walks from my neighbor's yard, across the street, to my front door, leaves his flyer, and proceeds across my yard on to the next house. He walks across the field of view of multiple cameras with various resolutions of 4K, 5Mpixel, & 1080p, this system used GTX1060 CUDA yolo8 and Coral M.2 TPU: https://youtu.be/XZYyE_WsRLI 
+
 
 # 0) Install Ubuntu 22.04
 I used Ubuntu-Mate.  Customize it as you see fit.
 
-If you are new to Linux, first thing after installing Ubuntu-Mate, go through the "Welcome" tutorial to learn the basics and then go to the "Control Center" and open "MATE Tweak" and from the sidebar select "Panel".  If you choose "Redmon" from the dropdown you'll get a destop that resembles Windows, if you choose "Cupetino" you'll get a Mac-like desktop.  If you can tolerate the Ubuntu "Unity" Desktop, fine, but I can't, and if coming from Windows or Mac be prepared for "eveything you know is wrong" when it comes to using the desktop UI.
+If you are new to Linux, first thing after installing Ubuntu-Mate, go through the "Welcome" tutorial to learn the basics and then go to the "Control Center" and open "MATE Tweak" and from the sidebar select "Panel".  If you choose "Redmon" from the dropdown you'll get a destop that resembles Windows, if you choose "Cupetino" you'll get a Mac-like desktop.  If you can tolerate the Ubuntu "Unity" Desktop, fine, but I can't, and if coming from Windows or Mac be prepared for "eveything you know is wrong" when it comes to using the Unity desktop UI.
 
-All my Python code, OpenVINO, node-red, Coral TPU drivers (if you need/want them) and CUDA (if you are using nVidia GPU instead of Intel) should be available on Windows, but I've not tested it.  But you'll lose the "housekeeping" functionality in some shell scripts that are called via node-red exec nodes in my minimal webbased "controller".  Minimal is a design feature, I wanted a "set and forget" appliance that runs 24/7/365 and is controlled by your "home automation" or a web browser to set one of three modes of operation.  "Notify" mode sends Email and audio alerts,  "Audio" uses "Espeak" speech synthsizer to announce what camera a person has been detected on, and Idle just saves detection without any nodifications.  If you manage to run it on Windows please submit your instructions so I can add them here.
+All my Python code, OpenVINO, node-red, Coral TPU drivers (if you need/want them) and CUDA (if you are using nVidia GPU instead of Intel) should be available on Windows, but I've not tested it.  But you'll lose the "housekeeping" functionality in some shell scripts that are called via node-red exec nodes in my minimal web based "controller".  Minimal is a design feature, I wanted a "set and forget" appliance that runs 24/7/365 and is controlled by your "home automation" or a web browser to set one of three modes of operation.  "Notify" mode sends Email and audio alerts,  "Audio" uses "Espeak" speech synthsizer to announce what camera a person has been detected on, and Idle just saves detection without any nodifications.  If you manage to run it on Windows please submit your instructions so I can add them here.
 
 Use your username where I have "ai" and your hostname where I have "YouSeeX1".
 To avoid having to edit the scripts used by node-red make a sym link in /home:
@@ -22,7 +24,7 @@ sudo ln -s /home/YourUserName /home/ai
 ```
 
 # 1) Install needed packages
-I like loging in remotely over via ssh, as running "headless" is a design goal, but it can all be done with a termenal window as well. OpenSSH is not installed by default so either install "OpenSSH" using "Control Center Software Botique" or in a terminal window do:
+I like loging in remotely over via ssh, as running "headless" is a design goal, but it can all be done with a termenal window as well. OpenSSH is not installed by default so either install "OpenSSH" using "Control Center Software Boutique" or in a terminal window do:
 ```
 sudo apt install ssh
 ```
@@ -32,7 +34,7 @@ sudo apt install git curl samba python3-dev python3-pip python3.10-venv espeak m
 ```
 
 # 2) Create Python Virtual environment and install the needed python modules
-Note Conda works well too, and I prefer it if you need a different python version than the system python3, but Conda  has issues being launched via a shell script via a node-red exec node.  If you know a solution, please send it to me.  I'm not very good with GitHub so you may need to help me with doing "pull requests" if it is not something you can just Email to me.
+Note Conda works well too, and I prefer it if you need a different python version than the system python3, but Conda  has issues being launched from a shell script via a node-red exec node.  If you know a solution, please send it to me.  I'm not very good with GitHub so you may need to help me with doing "pull requests" if it is not something you can just Email to me.
 
 ## 2a) Create a virtual environment to to use with OpenVINO and YOLO8, named y8ovv.
 NOTE: If using CUDA skip to section 2b) below and create a venv named y8cuda.  I had conflicts trying to get both OpenVINO iGPU and CUDA working in the same environment.  It is not really a big limitation as it seems that CUDA and OpenCL can't both be used at the same time for GPU acceleration.
