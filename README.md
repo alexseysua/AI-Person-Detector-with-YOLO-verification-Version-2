@@ -7,7 +7,10 @@ https://igor.technology/installing-coral-usb-accelearator-python-3-10-ubuntu-22/
 Which allows using the TPU on system python 3.10 eliminating the need for virtual environments for the basic AI,
 although I still strongly recommend using virtual environments since breaking old code has never been much of a consideration for OpenVINO.
 
-Here is an image sequence that shows the software in action, made from the detection images as a solicitor walks from my neighbor's yard, across the street, to my front door, leaves his flyer, and proceeds across my yard on to the next house. He walks across the field of view of multiple cameras with various resolutions of 4K, 5Mpixel, & 1080p, this system used GTX1060 CUDA yolo8 and Coral M.2 TPU: https://youtu.be/XZYyE_WsRLI 
+Here is an image sequence that shows the software in action, made from the detection images as a solicitor walks from my neighbor's yard, across the street, to my front door, leaves his flyer, and proceeds across my yard on to the next house. He walks across the field of view of multiple cameras with various resolutions of 4K, 5Mpixel, & 1080p, this system used GTX1060 CUDA yolo8 and Coral M.2 TPU: 
+https://youtu.be/XZYyE_WsRLI
+This is the first frame of the sequence so you can get an idea of the sensitivity of the system.
+![07_03_48 82_TPU_CliffwoodSouth_AI](https://github.com/user-attachments/assets/ec331062-cfd3-4e68-95ba-3e749ee691a2)
 
 
 # 0) Install Ubuntu 22.04
