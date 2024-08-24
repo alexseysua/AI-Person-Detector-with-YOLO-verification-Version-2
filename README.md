@@ -380,6 +380,8 @@ sudo smbpasswd -a ai
 ```
 
 # 7) Open Source Alternatives.
+My system was designed to be an addon to an existing DVR/NVR which seemed far easier than re-inventing this wheel, although it works fine with just IP or "net cams".  Most consumer priced DVR/NVR have really poor user interfaces, so my AI detection gives a much more efficient way to find regions of interest in the recordings using the timestamps built into the filenames than the typically lame timeline "scrubbing" of most consumer DVR/NVR.  I installed my first DVR in 2014 and in these 10 years I've gone back and actually looked at recorded video maybe half a dozen times since, but the 24/7 recordings can be "nice to have" if something really bad happens.
+
 ## Frigate
 If you want more tradational NVR/DVR type features along with AI person detection I'd suggest looking at Frigate:
 https://docs.frigate.video/
@@ -404,6 +406,3 @@ I've little experience with this one, it has a free limited version, and $$$ lic
 https://www.bluecherrydvr.com/
 https://github.com/bluecherrydvr/unity
 Probably its best feature is they've a repository for simple insttalation.
-
-
-My system was designed to be an addon to an existing DVR/NVR which seemed far easier than re-inventing this wheel, although it works fine with just IP or "net cams".  Most consumer priced DVR/NVR have really poor user interfaces, so my AI detection gives a much more efficient way to find regions of interest in the recordings using the timestamps built into the filenames than the typically lame timeline "scrubbing" of most consumer DVR/NVR.  I installed my first DVR in 2014 and in these 10 years I've gone back and actually looked at recorded video maybe half a dozen times since, but the 24/7 recordings can be "nice to have" if something really bad happens.
