@@ -384,25 +384,37 @@ My system was designed to be an addon to an existing DVR/NVR which seemed far ea
 
 ## Frigate
 If you want more tradational NVR/DVR type features along with AI person detection I'd suggest looking at Frigate:
+
 https://docs.frigate.video/
+
 https://github.com/blakeblackshear/frigate
+
 It runs as a "Docker" container and can integrates with the Home Assistant project:
+
 https://www.home-assistant.io/
 
 ## Zoneminder
 Zoneminder is another open source project to re-invent the DVR/NVR and add AI object detection features.
-https://zoneminder.com/
 I ran a very old version of Zoneminder for many years starting circa 2005, well before AI object was available. It is a long running and stable project.
+
+https://zoneminder.com/
+
+https://github.com/ZoneMinder/zoneminder
 
 ## iSpy
 Another "full featured" DVR/NVR replacement available for Windows, OSX and Linux.
-https://www.ispyconnect.com/
-https://github.com/ispysoftware/iSpy
 I've run into it when searching for camera URLs they have a pretty large database of these.
+
+https://www.ispyconnect.com/
+
+https://github.com/ispysoftware/iSpy
+
 https://www.ispyconnect.com/cameras
 
 ## Bluecherry
 I've little experience with this one, it has a free limited version, and $$$ licence required for full features.
-https://www.bluecherrydvr.com/
-https://github.com/bluecherrydvr/unity
 Probably its best feature is they've a repository for simple insttalation.
+
+https://www.bluecherrydvr.com/
+
+https://github.com/bluecherrydvr/unity
