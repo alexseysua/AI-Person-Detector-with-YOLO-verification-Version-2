@@ -271,7 +271,7 @@ To install the basic controller, open web browser (Chromium is recommended) and 
 Open the node-red "Hamburger" (three parallel bars) menu in the upper right corner of the editor and select "Import".  Press the "new flow" buton in the dialog box click the "select a file to import" button.  Navigate to the BasicAI2Controller.json. file.  Afterwards, click the Deploy button and you should be ready to go.  you'll have to set up the Email addresses in the "Setup Email" node and set up your smtp Email account credentials in the "Email Notification" node.  You will also have to edit the AI2/StartAI.sh file to use the correct options to start the AI2 Python code, hopefully the comments in the file help guide you.
 
 
-## 5) Setup to use the Coral TPU
+# 5) Setup to use the Coral TPU
 NOTE: on my i9-12900 I get ~42 frames per second for MobilenetSSD_v2 with both OpenVINO CPU and Coral TPU, but I believe that this is limited by the aggregate frame rate of my six onvif cameras.  It is on lessor hardware, like i3, where the TPU is well worth its modest cost.
 
 Add the "current" coral repo:
@@ -326,9 +326,20 @@ ls /dev/apex_0
 You should simply see the name repeated back:
 /dev/apex_0
 
+### Finally download and install the pycoral python module for python 3.10
+This article showed me how:
+https://igor.technology/installing-coral-usb-accelearator-python-3-10-ubuntu-22/
+Download the python "wheel" files for python10 from:
+https://github.com/hjonnala/snippets/tree/main/wheels/python3.10
+I downloaded them to the folder TPU_python3.10
+### Make your virtual environment active and do:
+```
+pip install TPU_python3.10/tflite_runtime-2.5.0.post1-cp310-cp310-linux_x86_64.whl
+pip install TPU_python3.10/pycoral-2.0.0-cp310-cp310-linux_x86_64.whl
+```
 
 # 6) Some useful options:
-## It is best to put AI detections on a seperate drive or USB stick, but not necessary,
+### It is best to put AI detections on a seperate drive or USB stick, but not necessary,
 I had to mount the external device to create the /media/ai directory where it will mount,
 then unmount it and do:
 ```
@@ -403,7 +414,7 @@ https://www.home-assistant.io/
 
 ## Zoneminder
 Zoneminder is another open source project to re-invent the DVR/NVR and add AI object detection features.
-I ran a very old version of Zoneminder for many years starting circa 2005, well before AI object was available. It is a long running and stable project.
+I ran a very old version of Zoneminder for many years starting circa 2005, well before AI object detection was available. It is a long running and stable project.
 
 https://zoneminder.com/
 
