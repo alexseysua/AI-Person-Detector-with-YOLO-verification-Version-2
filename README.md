@@ -52,10 +52,13 @@ source y8ovv/bin/activate
 Note that the prompt changes from: ai@YouSeeX1: to: (y8ovv) ai@YouSeeX1:
 Use pip to install the needed modules:
 ```
+pip install -U pip setuptools
 pip install imutils paho-mqtt requests
 pip install "openvino>=2024.2.0" "nncf>=2.9.0"
 pip install "torch>=2.1" "torchvision>=0.16" "ultralytics==8.2.24" onnx tqdm opencv-python --extra-index-url https://download.pytorch.org/whl/cpu
 ```
+Exit the virtual environment with "deactive" and the (y8ovv) prefix should disappear from the prompt.
+
 Install the Intel GPU driver:
 ```
 sudo apt-get install intel-opencl-icd
@@ -104,6 +107,7 @@ CUDA is like OpenVINO, quite dynamic, so my notes here from about two years ago 
 python3 -m venv y8cuda
 source y8cuda/bin/activate
 # promp changes to: (y8cuda)
+pip install -U pip setuptools
 pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
 pip install TPU_python3.10/tflite_runtime-2.5.0.post1-cp310-cp310-linux_x86_64.whl
 pip install TPU_python3.10/pycoral-2.0.0-cp310-cp310-linux_x86_64.whl
@@ -114,6 +118,10 @@ pip install ultralytics
 ```
 
 # 3) Clone this repo
+```
+sudo git clone https://github.com/wb666greene/AI-Person-Detector-with-YOLO-verification-Version-2.git
+mv https://github.com/wb666greene/AI-Person-Detector-with-YOLO-verification-Version-2 AI
+```
 ## Rename the directory to AI2, otherwise you'll need to edit the node-red scripts to account for the different names, then activate the virtual environment:
 ```
 source y8ovv/bin/activate  # or source y8cuda/bin/activate if using cuda
