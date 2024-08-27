@@ -145,7 +145,7 @@ tar -zxf ssd_mobilenet_v2_coco_2018_03_29.tar.gz
 ```
 The file to be converted is: frozen_inference_graph.pb
 after you've downloaded and unzipped the archive do these steps:
-'''
+```
 source y8ovv/bin/Activate
 cd AI2
 python
@@ -154,7 +154,7 @@ python
 >>> ov_model = ov.convert_model('../ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb')
 >>> ov.save_model(ov_model,'mobilenet_ssd_v2/ssd_mobilenet_v2_coco_2018_03_29.xml')
 >>> #enter Ctrl-d to exit python interpreter.
-'''
+```
 
 
 
