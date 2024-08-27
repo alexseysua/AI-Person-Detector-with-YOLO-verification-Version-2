@@ -57,7 +57,7 @@ pip install imutils paho-mqtt requests
 pip install "openvino>=2024.2.0" "nncf>=2.9.0"
 pip install "torch>=2.1" "torchvision>=0.16" "ultralytics==8.2.24" onnx tqdm opencv-python --extra-index-url https://download.pytorch.org/whl/cpu
 ```
-Exit the virtual environment with "deactive" and the (y8ovv) prefix should disappear from the prompt.
+If necessary, exit the virtual environment with "deactive" and the (y8ovv) prefix should disappear from the prompt.
 
 Install the Intel GPU driver:
 ```
