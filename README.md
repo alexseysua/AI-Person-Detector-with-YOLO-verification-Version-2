@@ -136,26 +136,20 @@ NOTE.  The models are too large to upload to GitHub and for some it may not be a
 https://raw.githubusercontent.com/google-coral/test_data/master/ssd_mobilenet_v2_coco_quant_postprocess_edgetpu.tflite
 ```
 Put it in the AI2/mobilenet_ssd_v2 folder, the coco_labels.txt should already be there.
+If you have a Coral TPU install its support as shown in section 5)
 
 ### For the openvino version download SSD MobileNet V2 model:
-Unfortunately the proceedure below produces a converted model that has multiple outputs which breaks my code and I've so far found no way to fix it.  If you can figure it out please let me know.  In the meantime if you want to use the MobilenetSSD_v2 openvino IR10 CPU AI model (that I converted years ago with openvinv 2021.1), message me and I'll send a link where you can download an archive of the model files (~30MB).  Put the two extracted files in the mobilenet_ssd_v2 along with the coco_labels.txt file.  I believe the issue stems from openvino 2022.1 that introduced a new IR11 format and the backwards compatabily seems to have been lost with 2024 versions.  If you have a Coral TPU install its support as shown in section 5)
 ```
+cd $HOME # should be one level above the AI2 directory
 wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz
 tar -zxf ssd_mobilenet_v2_coco_2018_03_29.tar.gz
 ```
-The file to be converted is: frozen_inference_graph.pb
-after you've downloaded and unzipped the archive do these steps:
-```
-source y8ovv/bin/Activate
-cd AI2
-python
-#You've now entered python's interactice mode, prompt is >>>, enter these commands:
->>> import openvino as ov
->>> ov_model = ov.convert_model('../ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb')
->>> ov.save_model(ov_model,'mobilenet_ssd_v2/ssd_mobilenet_v2_coco_2018_03_29.xml')
->>> #enter Ctrl-d to exit python interpreter.
-```
+First time AI2.py runs with the openvino CPU thread it will automatically convert the model and save it to the AI2/mobilenet_ssd_v2 directory, eliminating the conversion time for subsequent runs.
+Unfortunately openvino 2024.x conversion produces a model that has multiple outputs, which breaks my code. I believe the issue stems from openvino 2022.1 that introduced a new IR11 format and the backwards compatabily seems to have been lost with 2024 versions.  I made my code automatically convert the downloaded model and use the multiple outputs, but there is still an issue in that it only detects one person in the frame even if multiple persons are present. Since I break out of the detection loop after the first person is detected with a confidence above the threshold, it is not a show-stopper, but could cause issues.  It works fine in limited testing, but I've an issue open at the Intel OpenVINO Community Forum:
 
+https://community.intel.com/t5/Intel-Distribution-of-OpenVINO/Having-trouble-with-model-convert-and-tensorflow-model-with-pip/m-p/1624526#M31331
+
+And will update the code and this README.md if a solution is found.
 
 
 ## Next we need to tell the python code how to talk to the cameras. 
