@@ -138,7 +138,7 @@ https://raw.githubusercontent.com/google-coral/test_data/master/ssd_mobilenet_v2
 Put it in the AI2/mobilenet_ssd_v2 folder, the coco_labels.txt should already be there.
 If you have a Coral TPU install its support as shown in section 5)
 
-### For the openvino version download SSD MobileNet V2 model:
+### For the openvino CPU initial detection, download SSD MobileNet V2 model:
 ```
 cd $HOME # should be one level above the AI2 directory
 wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz
