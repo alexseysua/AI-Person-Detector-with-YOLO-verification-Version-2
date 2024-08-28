@@ -122,9 +122,9 @@ pip install ultralytics
 sudo git clone https://github.com/wb666greene/AI-Person-Detector-with-YOLO-verification-Version-2.git
 mv https://github.com/wb666greene/AI-Person-Detector-with-YOLO-verification-Version-2 AI
 ```
-## Rename the directory to AI2, otherwise you'll need to edit the node-red scripts to account for the different names, then activate the virtual environment:
+#### Don't skip the mv (rename) of the directory to AI2, otherwise you'll need to edit the node-red scripts to account for the different names. 
+
 ```
-source y8ovv/bin/activate  # or source y8cuda/bin/activate if using cuda
 cd AI2
 # make sure the five *.sh scripts have the execute bit set.
 chmod ugo+x *.sh
@@ -145,7 +145,7 @@ wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coc
 tar -zxf ssd_mobilenet_v2_coco_2018_03_29.tar.gz
 ```
 First time AI2.py runs with the openvino CPU thread it will automatically convert the model and save it to the AI2/mobilenet_ssd_v2 directory, eliminating the conversion time for subsequent runs.
-Unfortunately openvino 2024.x conversion produces a model that has multiple outputs, which breaks my code. I believe the issue stems from openvino 2022.1 that introduced a new IR11 format and the backwards compatabily seems to have been lost with 2024 versions.  I made my code automatically convert the downloaded model and use the multiple outputs, but there is still an issue in that it only detects one person in the frame even if multiple persons are present. Since I break out of the detection loop after the first person is detected with a confidence above the threshold, it is not a show-stopper, but could cause issues.  It works fine in limited testing, but I've an issue open at the Intel OpenVINO Community Forum:
+Unfortunately openvino 2024.x conversion produces a model that has multiple outputs, which broke my code. I believe the issue stems from openvino 2022.1 that introduced a new IR11 format and the backwards compatabily seems to have been lost with 2024 versions.  I made my code automatically convert the downloaded model and use the multiple outputs, but there is still an issue in that it only detects one person in the frame even if multiple persons are present. Since I break out of the detection loop after the first person is detected with a confidence above the threshold, it is not a show-stopper, but could cause issues.  It works fine in limited testing, but I've an issue open at the Intel OpenVINO Community Forum:
 
 https://community.intel.com/t5/Intel-Distribution-of-OpenVINO/Having-trouble-with-model-convert-and-tensorflow-model-with-pip/m-p/1624526#M31331
 
