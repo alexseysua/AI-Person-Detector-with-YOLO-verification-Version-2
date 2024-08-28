@@ -4,8 +4,8 @@
     from the TPU, CPU, etc. AI and then yolo8 is run on the zoomed in
     image and if person is detected the image is sent to the results queue.
     
-    On 19-8750H desktop with Nvidia RTX3070:
-    python3 AI.py -nTPU 1 -y8v -d 1 -cam 6onvif.txt -rtsp 19cams.rtsp
+    On 19-12900k desktop with Nvidia RTX3070:
+    python3 AI.py -tpu -y8v -d -cam 6onvif.txt -rtsp 19cams.rtsp
     Yielded ~75 fps with 25 cameras for an ~80660 second test run.
     There were 6,064,648 frames processed by the TPU with 3595 persons detected.
     The yolo8 verification accepted 3024 and rejected 571.
@@ -18,8 +18,7 @@ from ultralytics import YOLO
 import datetime
 from imutils.video import FPS
 import cv2
-
-###import torch
+from pathlib import Path
 
 
 global __Thread__
@@ -43,6 +42,11 @@ one time code to run when thread is launched.
 def threadInit():
     global model
     global __y8modelSTR__
+    
+    # intialize and setup the model
+    # Load the YOLOv8 model
+    models_dir = Path("./yolo8")
+    models_dir.mkdir(exist_ok=True)
     
     # Load the YOLOv8 model
     model = YOLO(__y8modelSTR__)

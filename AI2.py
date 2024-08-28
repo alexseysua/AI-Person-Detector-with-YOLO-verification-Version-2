@@ -127,7 +127,7 @@ if 1:
     # These are too help the auto tiling algorithm, but not realiabe with window manager and CV2 version difference
     ap.add_argument("-Ytop", "--Ytop", type=int, default=0, help="Y in pixels to move all windows down for tiling, default=0")
     ap.add_argument("-Xleft", "--Xleft", type=int, default=0, help="X in pixels to move all windows left for tiling, default=0")
-    ap.add_argument("-Yoff", "--Yoffset", type=int, default=56, help="Y offset to account for window decorations, default=56")
+    ap.add_argument("-Yoff", "--Yoffset", type=int, default=36, help="Y offset to account for window decorations, default=38")
     ap.add_argument("-Xoff", "--Xoffset", type=int, default=0, help="X offset to account for window decorations, default=0")
     
     # show zoom image of detections even if -d parameter is 0
@@ -553,13 +553,14 @@ def main():
 
         # *** attempt to move windows into tiled grid
         ''' These are set by arguments, these should be the defaults.
+        # attempt to compensate for openCV window "decorations" varies too much with system to really work
         Ytop=0
         Xleft=0
-        Xborder=0   ## attempt to compensate for openCV window "decorations" varies too much with system to really work
-        Yborder=56
+        Xborder=0
+        Yborder=38
         '''
-        Xshift=imwinWidth+Xborder
-        Yshift=imwinHeight+Yborder
+        Xshift=imwinWidth+Xleft
+        Yshift=imwinHeight+Ytop
         Ncols=int(displayWidth/imwinWidth)
         Nrows=int(displayHeight/imwinHeight)
         print("[INFO] Attempting to tile live camera display windows.")
@@ -568,8 +569,8 @@ def main():
             name=str("Live_" + CamName[i])
             row=int(i/Ncols)
             col=i%Ncols
-            cv2.moveWindow(name, Xleft+col*Xshift, Ytop+row*Yshift)
-            print("Row, Column, x, y: ",row, col, Ytop+row*Yshift, Xleft+col*Xshift)
+            cv2.moveWindow(name, Xborder+col*Xshift, Yborder+row*Yshift)
+            print("Row, Column, x, y: ",row, col, Yborder+row*Yshift, Xborder+col*Xshift)
             cv2.waitKey(1)
     else:
         if show_zoom:
@@ -580,7 +581,7 @@ def main():
 
 
     if nCoral is False and nCPUthreads is False:
-        print("\n[INFO] No Coral TPU, OpenVINO CPU or GPU devices specified,  forcing one CPU AI thread.")
+        print("\n[INFO] No Coral TPU or OpenVINO devices specified,  forcing one CPU AI thread.")
         nCPUthreads=True   # we always can force one CPU thread, but ~1.8 seconds/frame on Pi3B+
 
     # these need to be loaded before an AI thread launches them
@@ -624,6 +625,13 @@ def main():
             args=(resultsQ, inframeQ, model, i, cameraLock, nextCamera, Ncameras,
                     PREPROCESS_DIMS, confidence, verifyConf, "TPU", blobThreshold,  yoloQ)))
         Ct[0].start()
+        sleepCount=0
+        while Coral_TPU_Thread.__Thread__ is False:
+            sleepCount+=1
+            time.sleep(1.0)
+            if sleepCount >= 15:
+                print('[ERROR] OpenVINO_SSD_Thread failed to start, exiting...')
+                quit()
 
 
     # ** setup and start openvino CPU AI thread.
@@ -639,6 +647,15 @@ def main():
                     args=(resultsQ, inframeQ, None, i, cameraLock, nextCamera, Ncameras,
                     PREPROCESS_DIMS, confidence-0.1, verifyConf-0.1, "SSDv2_IR10_CPU", blobThreshold, yoloQ)))
         CPUt[0].start()
+        # wait for OpenVINO_SSD_Thread to start, so I can see any error messages can be tough to tell which thread they are from.
+        sleepCount=0
+        while OpenVINO_SSD_Thread.__Thread__ is False:
+            sleepCount+=1
+            time.sleep(1.0)
+            if sleepCount >= 15:
+                print('[ERROR] OpenVINO_SSD_Thread failed to start, exiting...')
+                quit()
+            
 
 
     if OVyolo8_verify:
@@ -649,8 +666,13 @@ def main():
         yolo8ov.append(Thread(target=yolo8OpenvinoVerification_Thread.yolo8ov_thread, args=(resultsQ, yoloQ)))
         yolo8ov[0].start()
         # wait for yolo thread to be running
+        sleepCount=0
         while yolo8OpenvinoVerification_Thread.__Thread__ is False:
+            sleepCount+=1
             time.sleep(1.0)
+            if sleepCount >= 15:
+                print('[ERROR] OpenVINO_SSD_Thread failed to start, exiting...')
+                quit()
         print("[INFO] OpenVINO yolo_v8 verification thread is running. ")
 
     if yolo8_verify:
@@ -661,8 +683,13 @@ def main():
         yolo8.append(Thread(target=yolo8_verification_Thread.yolov8_thread,args=(resultsQ, yoloQ)))
         yolo8[0].start()
         # wait for yolo thread to be running
+        sleepCount=0
         while yolo8_verification_Thread.__Thread__ is False:
+            sleepCount+=1
             time.sleep(1.0)
+            if sleepCount >= 15:
+                print('[ERROR] OpenVINO_SSD_Thread failed to start, exiting...')
+                quit()
         print("[INFO] Ultralytics yolo_v8 verification thread is running. ")
 
 

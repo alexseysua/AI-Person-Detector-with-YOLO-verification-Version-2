@@ -15,7 +15,9 @@ import cv2
 import datetime
 import logging as log
 import sys
+import os
 from imutils.video import FPS
+from pathlib import Path
 import openvino as ov
 
 
@@ -46,16 +48,44 @@ def AI_thread(resultsQ, inframe, net, tnum, cameraLock, nextCamera, Ncameras,
     detect=0
     noDetect=0
     DNN_verify_fail=0
-    model_path = 'mobilenet_ssd_v2/MobilenetSSDv2cocoIR10.xml'
+    
+    models_dir = Path("./mobilenet_ssd_v2")
+    models_dir.mkdir(exist_ok=True)
+
+    if os.path.exists('mobilenet_ssd_v2/MobilenetSSDv2cocoIR10.xml'):
+        MO_2021 = True
+        model_path = 'mobilenet_ssd_v2/MobilenetSSDv2cocoIR10.xml'   # my IR10 conversion done with openvino 2021.3
+        aiStr = dnnTarget
+    else:
+        aiStr = 'ovCPU'
+        MO_2021 = False
+        if os.path.exists('mobilenet_ssd_v2/ssd_mobilenet_v2_coco_2018_03_29.xml'): # ov converted and saved model from 2018 
+            model_path = 'mobilenet_ssd_v2/ssd_mobilenet_v2_coco_2018_03_29.xml'
+        else:
+            if os.path.exists('../ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.xml'):
+                print('[INFO] Converting downloaded ssd_mobilenet_v2_coco_2018_03_29 model, be patient ...')
+                model = ov.convert_model('../ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb')
+                print('[INFO] Saving converted mode, so this step can be skipped on the next program run.')
+                ov.save_model(model,'mobilenet_ssd_v2/ssd_mobilenet_v2_coco_2018_03_29.xml')
+                model_path = 'mobilenet_ssd_v2/ssd_mobilenet_v2_coco_2018_03_29.xml'
+            else:
+                print('[ERROR] ssd_mobilenet_v2_coco_2018_03_29 has not been found!')
+                print('     Download it to one level above AI2 directory with:')
+                print('cd ..')
+                print('wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz')
+                print('tar -zxf ssd_mobilenet_v2_coco_2018_03_29.tar.gz')
+                print(' Exiting...')
+                quit()
+    
+    
     device_name = 'CPU'
     __VERIFY_DIMS__ = PREPROCESS_DIMS
     
     log.basicConfig(format='[ %(levelname)s ] %(message)s', level=log.INFO, stream=sys.stdout)
-    print("[INFO] OpenVINO CPU MobilenetSSD  AI thread using " + dnnTarget + " is starting...")
+    print("[INFO] OpenVINO CPU MobilenetSSD  AI thread using " + aiStr + " is starting...")
     if yoloQ is not None:
         print("    OpenVINO CPU MobilenetSSD AI thread is using yolo verification.")
-    aiStr = dnnTarget
-
+    
     ## basically lifted from hello_reshape_ssd.py sample code installed with apt install of openvino 2024
     # --------------------------- Step 1. Initialize OpenVINO Runtime Core ------------------------------------------------
     log.info('Creating OpenVINO Runtime Core')
@@ -66,22 +96,31 @@ def AI_thread(resultsQ, inframe, net, tnum, cameraLock, nextCamera, Ncameras,
     for device in devices:
         deviceName = core.get_property(device, "FULL_DEVICE_NAME")
         print(f"   {device}: {deviceName}")
+        
     # --------------------------- Step 2. Read a model --------------------------------------------------------------------
     log.info(f'Reading the model: {model_path}')
     # (.xml and .bin files) or (.onnx file)
     model = core.read_model(model_path)
+    ##print(len(model.outputs), model.outputs)
+    ##print('')      
+
     if len(model.inputs) != 1:
         log.error('Supports only single input topologies.')
         return -1
+    '''
     if len(model.outputs) != 1:
         log.error('Supports only single output topologies')
+        print(len(model.outputs), model.outputs)
+        print('')      
         return -1
-# --------------------------- Step 3. Set up input --------------------------------------------------------------------
+    '''
+    
+    # --------------------------- Step 3. Set up input --------------------------------------------------------------------
     ## create image to set model size
     '''
         This was very confusing, sample code says:
         'Reshaping the model to the height and width of the input image'
-        which makes no since to me.  If I feed in larger images it sort of works
+        which makes no sence to me.  If I feed in larger images it sort of works
         but boxes are wrong and detections are poor. I know my MobilenetSSD_v2
         model was for images sized 300x300 so I create a dummy image of this size
         and use it to "reshape" the model.
@@ -89,34 +128,38 @@ def AI_thread(resultsQ, inframe, net, tnum, cameraLock, nextCamera, Ncameras,
     imageM = np.zeros(( 300, 300, 3), np.uint8)
     imageM[:,:] = (127,127,127)
     input_tensor = np.expand_dims(imageM, 0)    # Add N dimension
+    n, h, w, c = input_tensor.shape # we'll need h,w later
+    '''
     log.info('Reshaping the model to the height and width of the input image')
-    n, h, w, c = input_tensor.shape
     model.reshape({model.input().get_any_name(): ov.PartialShape((n, c, h, w))})
     #print(n, c, w, h)
-# --------------------------- Step 4. Apply preprocessing -------------------------------------------------------------
-    ## I've made zero effort to understand this, but it seems to work!
-    ppp = ov.preprocess.PrePostProcessor(model)
-    # 1) Set input tensor information:
-    # - input() provides information about a single model input
-    # - precision of tensor is supposed to be 'u8'
-    # - layout of data is 'NHWC'
-    ppp.input().tensor() \
-        .set_element_type(ov.Type.u8) \
-        .set_layout(ov.Layout('NHWC'))  # noqa: N400
-    # 2) Here we suppose model has 'NCHW' layout for input
-    ppp.input().model().set_layout(ov.Layout('NCHW'))
-    # 3) Set output tensor information:
-    # - precision of tensor is supposed to be 'f32'
-    ppp.output().tensor().set_element_type(ov.Type.f32)
-    # 4) Apply preprocessing modifing the original 'model'
-    model = ppp.build()
-# ---------------------------Step 4. Loading model to the device-------------------------------------------------------
-    log.info('Loading the model to the plugin')
+    '''
+    if MO_2021:
+        # --------------------------- Step 4. Apply preprocessing -------------------------------------------------------------
+        ## I've made zero effort to understand this, but it seems to work!
+        ppp = ov.preprocess.PrePostProcessor(model)
+        # 1) Set input tensor information:
+        # - input() provides information about a single model input
+        # - precision of tensor is supposed to be 'u8'
+        # - layout of data is 'NHWC'
+        ppp.input().tensor() \
+            .set_element_type(ov.Type.u8) \
+            .set_layout(ov.Layout('NHWC'))  # noqa: N400
+        # 2) Here we suppose model has 'NCHW' layout for input
+        ppp.input().model().set_layout(ov.Layout('NCHW'))
+        # 3) Set output tensor information:
+        # - precision of tensor is supposed to be 'f32'
+        ##ppp.output().tensor().set_element_type(ov.Type.f32)
+        # 4) Apply preprocessing modifing the original 'model'
+        model = ppp.build()
+        # ---------------------------Step 4. Loading model to the device-------------------------------------------------------
+    
+    log.info('Compiling model to the ' + device_name + ' plugin')
     compiled_model = core.compile_model(model, device_name)
 
 
     __Thread__ = True
-    print("[INFO] OpenVINO CPU MobilenetSSD AI thread using " + dnnTarget + " is running...")
+    print("[INFO] OpenVINO CPU MobilenetSSD AI thread using " + aiStr + " is running...")
     cfps = FPS().start()
     while __Thread__:
         cameraLock.acquire()
@@ -137,8 +180,15 @@ def AI_thread(resultsQ, inframe, net, tnum, cameraLock, nextCamera, Ncameras,
         imageM = cv2.resize(image, (300,300))
         input_tensor = np.expand_dims(imageM, 0)
         results = compiled_model.infer_new_request({0: input_tensor})
-        predictions = next(iter(results.values()))
-        detections = predictions.reshape(-1, 7)
+        '''
+        print('\nModel Output:')  # dump what the model returns
+        print(results)
+        print(' ')
+        '''
+        if MO_2021:
+            predictions = next(iter(results.values()))
+            detections = predictions.reshape(-1, 7)
+
         cfps.update()    # update the FPS counter
         # loop over the detections, pretty much straight from the PyImageSearch sample code.
         personIdx=1     # openvino is one based index into coco_labels.txt
@@ -147,48 +197,64 @@ def AI_thread(resultsQ, inframe, net, tnum, cameraLock, nextCamera, Ncameras,
         ndetected=0
         fcnt+=1
         boxPoints=(0,0, 0,0, 0,0, 0,0)  # startX, startY, endX, endY, Xcenter, Ycenter, Xlength, Ylength
-        for detection in detections:
-            conf = detection[2]  # extract the confidence (i.e., probability)
-            idx = int(detection[1])   # extract the index of the class label, 1 based, not zero based!
-            # filter out weak detections by ensuring the `confidence` is greater than the minimum confidence
-            if conf > confidence and idx == personIdx :
-                # then compute the (x, y)-coordinates of the bounding box for the object
-                startX = int(detection[3] * W)
-                startY = int(detection[4] * H)
-                endX = int(detection[5] * W)
-                endY = int(detection[6] * H)
-                '''
-                startX=max(1, startX)    # Do I still need these?
-                startY=max(1, startY)
-                endX=min(endX, W-1)
-                endY=min(endY,H-1)
-                '''
-                xlen=endX-startX
-                ylen=endY-startY
-                xcen=int((startX+endX)/2)
-                ycen=int((startY+endY)/2)
-                boxPoints=(startX,startY, endX,endY, xcen,ycen, xlen,ylen)
-                # adhoc "fix" for out of focus blobs close to the camera
-                # out of focus blobs sometimes falsely detect -- insects walking on camera, etc.
-                # TODO: make blobThreshold be camera specific?  So far doesn't seem necessary.
-                if float(xlen*ylen)/(W*H) > blobThreshold:     # detection filling too much of the frame is bogus
-                   continue
-                # In my real world use I have some static false detections, mostly under IR or mixed lighting -- hanging plants etc.
-                # I could put camera specific adhoc filters here based on (xlen,ylen,xcenter,ycenter)
-                # TODO: come up with better way to do it, probably return (xlen,ylen,xcenter,ycenter) and filter at saving or Notify step.
-                #       Now seems best to do it in the node-red notification step, don't need to stop AI to make changes!
-                # display and label the prediction
-                label = "{:.1f}%  C:{},{}  W:{} H:{}  UL:{},{}  LR:{},{}  {}".format(conf * 100,
-                         str(xcen), str(ycen), str(xlen), str(ylen), str(startX), str(startY), str(endX), str(endY), dnnTarget)
-                cv2.putText(image, label, (2, (H-5)-(ndetected*28)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, __Color__, 2, cv2.LINE_AA)
-                cv2.rectangle(image, (startX, startY), (endX, endY), __Color__, 2)
-                personDetected = True
-                initialConf=conf
-                ndetected+=1
-                break   # the one with highest confidence is enough
-
-        # do zoom and redetect to verify, rejects lots of plants as people false detection.
-        if personDetected: # always verify
+        
+        if MO_2021:
+            for detection in detections:
+                conf = detection[2]  # extract the confidence (i.e., probability)
+                idx = int(detection[1])   # extract the index of the class label, 1 based, not zero based!
+                # filter out weak detections by ensuring the `confidence` is greater than the minimum confidence
+                if conf > confidence and idx == personIdx :
+                    # then compute the (x, y)-coordinates of the bounding box for the object
+                    startX = int(detection[3] * W)
+                    startY = int(detection[4] * H)
+                    endX = int(detection[5] * W)
+                    endY = int(detection[6] * H)
+                    xlen=endX-startX
+                    ylen=endY-startY
+                    xcen=int((startX+endX)/2)
+                    ycen=int((startY+endY)/2)
+                    boxPoints=(startX,startY, endX,endY, xcen,ycen, xlen,ylen)
+                    # adhoc "fix" for out of focus blobs close to the camera
+                    # out of focus blobs sometimes falsely detect -- insects walking on camera, etc.
+                    # TODO: make blobThreshold be camera specific?  So far doesn't seem necessary.
+                    if float(xlen*ylen)/(W*H) > blobThreshold:     # detection filling too much of the frame is bogus
+                        continue
+                    personDetected = True
+                    ndetected+=1
+                    break    # the one with highest confidence is enough
+        else:   # 2024.3 model conversion
+            num_detected=int(results[3][0]) # get number of objects detected, always seems to be 1 with 2024.3 converted model
+            for i in range(num_detected):
+                conf = results[2][0][i]
+                idx = int(results[1][0][i])
+                if conf > confidence and idx == personIdx:
+                    startX = int(results[0][0][i][1] * W)   # box points
+                    startY = int(results[0][0][i][0] * H)
+                    endX = int(results[0][0][i][3] * W)
+                    endY = int(results[0][0][i][2] * H)
+                    xlen=endX-startX
+                    ylen=endY-startY
+                    xcen=int((startX+endX)/2)
+                    ycen=int((startY+endY)/2)
+                    boxPoints=(startX,startY, endX,endY, xcen,ycen, xlen,ylen)
+                    if float(xlen*ylen)/(W*H) > blobThreshold:     # detection filling too much of the frame is bogus
+                        continue
+                    personDetected = True
+                    ndetected+=1
+                    break
+        
+        if personDetected:   
+            # In my real world use I have some static false detections, mostly under IR or mixed lighting -- hanging plants etc.
+            # I could put camera specific adhoc filters here based on (xlen,ylen,xcenter,ycenter)
+            # TODO: come up with better way to do it, probably return (xlen,ylen,xcenter,ycenter) and filter at saving or Notify step.
+            #       Now seems best to do it in the node-red notification step, don't need to stop AI to make changes!
+            # display and label the prediction
+            label = "{:.1f}%  C:{},{}  W:{} H:{}  UL:{},{}  LR:{},{}  {}".format(conf * 100,
+                     str(xcen), str(ycen), str(xlen), str(ylen), str(startX), str(startY), str(endX), str(endY), aiStr)
+            cv2.putText(image, label, (2, (H-5)-(ndetected*28)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, __Color__, 2, cv2.LINE_AA)
+            cv2.rectangle(image, (startX, startY), (endX, endY), __Color__, 2)
+            initialConf=conf
+            # do zoom and redetect to verify, rejects lots of plants as people false detection.
             personDetected = False  # repeat on zoomed detection box
             DNNdetect = True    # flag we had initial DNN detection
             try:
@@ -208,22 +274,35 @@ def AI_thread(resultsQ, inframe, net, tnum, cameraLock, nextCamera, Ncameras,
                     print(" OpenVINO CPU verification, Bad resize!  h:{}  w:{}".format(h, w))
                     continue
             except Exception as e:
-                print(dnnTarget + " crop Exception: " + str(e))
-                ##print(dnnTarget + " crop region ERROR: ", startY, endY, startX, endX)
+                print(aiStr + " crop Exception: " + str(e))
+                ##print(aiStr + " crop region ERROR: ", startY, endY, startX, endX)
                 continue
             input_tensor = np.expand_dims(zimg, 0)
             results = compiled_model.infer_new_request({0: input_tensor})
-            predictions = next(iter(results.values()))
-            detections = predictions.reshape(-1, 7)
-            for detection in detections:
-                conf = detection[2]  # extract the confidence (i.e., probability)
-                idx = int(detection[1])   # extract the index of the class label, 1 based, not zero based!
-                # filter out weak detections by ensuring the `confidence` is greater than the minimum confidence
-                if conf > verifyConf and idx == personIdx :
-                    text = "Verify: {:.1f}%".format(conf * 100)   # show verification confidence
-                    cv2.putText(image, text, (2, 28), cv2.FONT_HERSHEY_SIMPLEX, 1.0, __Color__, 2)
-                    personDetected = True
-                    break   # one is good enough
+            
+            if MO_2021:
+                predictions = next(iter(results.values()))
+                detections = predictions.reshape(-1, 7)
+                for detection in detections:
+                    conf = detection[2]  # extract the confidence (i.e., probability)
+                    idx = int(detection[1])   # extract the index of the class label, 1 based, not zero based!
+                    # filter out weak detections by ensuring the `confidence` is greater than the minimum confidence
+                    if conf > verifyConf and idx == personIdx :
+                        text = "Verify: {:.1f}%".format(conf * 100)   # show verification confidence
+                        cv2.putText(image, text, (2, 28), cv2.FONT_HERSHEY_SIMPLEX, 1.0, __Color__, 2)
+                        personDetected = True
+                        break   # one is good enough
+            else:
+                num_detected=int(results[3][0]) # get number of objects detected, always seems to be 1 with 2024.3 converted model
+                for i in range(num_detected):
+                    conf = results[2][0][i]
+                    idx = int(results[1][0][i])
+                    if conf > confidence and idx == personIdx:
+                        text = "Verify: {:.1f}%".format(conf * 100)   # show verification confidence
+                        cv2.putText(image, text, (2, 28), cv2.FONT_HERSHEY_SIMPLEX, 1.0, __Color__, 2)
+                        personDetected = True
+                        break   # one is good enough
+            
             cfps.update()    # update the FPS counter
         try:
             # Queue results
@@ -278,11 +357,11 @@ def AI_thread(resultsQ, inframe, net, tnum, cameraLock, nextCamera, Ncameras,
             continue
     # Thread exits
     cfps.stop()    # stop the FPS counter timer
-    print("\nOpenVINO CPU MobilenetSSD AI thread " + dnnTarget + ", waited: " + str(waits) + " dropped: " + str(ecnt+dcnt+ncnt) + " of "
+    print("\nOpenVINO CPU MobilenetSSD AI thread " + aiStr + ", waited: " + str(waits) + " dropped: " + str(ecnt+dcnt+ncnt) + " of "
          + str(fcnt) + " images.  AI: {:.2f} inferences/sec".format(cfps.fps()))
-    print("    " + dnnTarget + " Persons Detected: " + str(detect) + ",  Frames with no person: " + str(noDetect))
-    print("    " + dnnTarget + " " + str(DNN_verify_fail) + " detections failed zoom-in verification.")
-    print("    " + dnnTarget + " Detections dropped: " + str(dcnt) + ", results dropped: " + str(ncnt) + ", resultsQ.put() exceptions: " + str(ecnt))
+    print("    " + aiStr + " Persons Detected: " + str(detect) + ",  Frames with no person: " + str(noDetect))
+    print("    " + aiStr + " " + str(DNN_verify_fail) + " detections failed zoom-in verification.")
+    print("    " + aiStr + " Detections dropped: " + str(dcnt) + ", results dropped: " + str(ncnt) + ", resultsQ.put() exceptions: " + str(ecnt))
 
 
 

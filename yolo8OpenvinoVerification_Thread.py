@@ -4,8 +4,8 @@
     from the TPU, CPU, etc. AI and then yolo8 is run on the zoomed in
     image and if person is detected the image is sent to the results queue.
     
-    On 19-8750H desktop with Nvidia RTX3070:
-    python3 AI.py -nTPU 1 -y8v -d 1 -cam 6onvif.txt -rtsp 19cams.rtsp
+    On 19-12900K desktop with Nvidia RTX3070:
+    python3 AI.py -tpu -y8v -d -cam 6onvif.txt -rtsp 19cams.rtsp
     Yielded ~75 fps with 25 cameras for an ~80660 second test run.
     There were 6,064,648 frames processed by the TPU with 3595 persons detected.
     The yolo8 verification accepted 3024 and rejected 571.
@@ -42,7 +42,7 @@ def yolo8ov_thread(resultsQ, yoloQ):
     global model
     global __y8modelSTR__
 
-    print("Starting Yolo v8 verification thread...")
+    print("Starting Yolo v8 verification thread...\n")
     if yoloQ is None:
         print(    "ERROR! no yolo Queue!")
         return -1
@@ -59,9 +59,9 @@ def yolo8ov_thread(resultsQ, yoloQ):
     # object detection model  export to OpenVINO format
     det_model_path = models_dir / f"{__y8modelSTR__}_openvino_model/{__y8modelSTR__}.xml"
     if not det_model_path.exists():
-        print('[INFO] Exporting yolo model to OpenVINO format...')
+        print('\n[INFO] Exporting yolo model to OpenVINO format...')
         det_model.export(format="openvino", dynamic=True, half=True)
-    print('[INFO] Using OpenVINO: ' + ov.__version__)
+    print('\n[INFO] Using OpenVINO: ' + ov.__version__)
     core = ov.Core()
     ov_config = {}
     det_ov_model = core.read_model(det_model_path)
