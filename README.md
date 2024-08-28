@@ -402,7 +402,7 @@ https://docs.frigate.video/
 
 https://github.com/blakeblackshear/frigate
 
-It runs as a "Docker" container and can integrates with the Home Assistant project:
+It runs as a "Docker" container and can integrate with the Home Assistant project:
 
 https://www.home-assistant.io/
 
