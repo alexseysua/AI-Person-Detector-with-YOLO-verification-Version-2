@@ -585,12 +585,25 @@ def main():
         nCPUthreads=True   # we always can force one CPU thread, but ~1.8 seconds/frame on Pi3B+
 
     # these need to be loaded before an AI thread launches them
+    '''
+    # From the Ultralytics website, tradeoff for the different models, clearly "x" is "best"
+    # but its too much for a GTX950 and "m" running on openvino i3 iGPU seemed just as good
+    # in a parallel run using the same rtsp streams, too many drops with "x" model on GTX950.
+    # Realistically GTX950 is about as low as we can go, I may make this selection a command
+    # line parameter eventually, but "l" needs twice the Flops for 1.7 gain in mAPval.
+    Model	    Pixels  mAPval  CPU(mS)  A100(nS)   #parms  Flops
+    YOLOv8n	    640	    37.3	80.4	 0.99	    3.2	    8.7
+    YOLOv8s	    640	    44.9	128.4	 1.20	    11.2	28.6
+    YOLOv8m	    640	    50.2	234.7	 1.83	    25.9	78.9
+    YOLOv8l	    640	    52.9	375.2	 2.39	    43.7	165.2
+    YOLOv8x	    640 	53.9	479.1	 3.53	    68.2	257.8
+    '''
     if yolo8_verify:
         #import Ultralytics yolo8
         client.publish("AI/Status", "Loading Ultralytics CUDA yolo8.", 2, True)
         import yolo8_verification_Thread
-        # using yolov8x.pt for now m is  "fastest" x is "most accurate" l is in between
-        yolo8_verification_Thread.__y8modelSTR__ = 'yolo8/yolov8x.pt'
+        # using yolov8m.pt for now m seems the best speed-accuracy tradeoff
+        yolo8_verification_Thread.__y8modelSTR__ = 'yolo8/yolov8m.pt'
         yolo8_verification_Thread.__verifyConf__ = yoloVerifyConf
     if OVyolo8_verify:
         client.publish("AI/Status", "Loading OpenVINO yolo8.", 2, True)
