@@ -431,3 +431,30 @@ Probably its best feature is they've a repository for simple insttalation.
 https://www.bluecherrydvr.com/
 
 https://github.com/bluecherrydvr/unity
+
+
+# 8) Some performance summaries on different hardware.
+### Lenovo Ideapad3 i3-1115GS4 @3 Ghz 4 cores, Mesa UHD graphics (TGL GT2), 8GB RAM, Ubuntu-Mate 20.04
+This system cost me ~$160 as an "openbox close-out" at Microcenter when 12th gen systems were released.
+Using four 4K rtsp streams at ~3 fps per camera for a test run, with node-red installed and running command:
+```
+python AI2.py -d -nsz -y8ovv
+
+[INFO] Program Exit signal received:  2024-08-29 15:26:01
+*** AI processing approx. FPS: 12.83 ***
+    [INFO] Run elapsed time: 69751.02
+    [INFO] Frames processed by AI system: 894734
+    [INFO] Person Detection by AI system: 1643
+    [INFO] Main loop waited for resultsQ: 272851 times.
+
+[INFO] Stopping OpenVINO yolo8 verification Thread ...
+Yolo v8 frames Verified: 1643, Rejected: 365,  Waited: 68934 seconds.
+    Verified dropped: 0, results dropped: 0, results.put() exceptions: 0
+
+[INFO] Stopping openvino CPU AI  Thread ...
+OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 174222 dropped: 162 of 894906 images.  AI: 13.07 inferences/sec
+    ovCPU Persons Detected: 2008,  Frames with no person: 892898
+    ovCPU 15682 detections failed zoom-in verification.
+    ovCPU Detections dropped: 0, results dropped: 162, resultsQ.put() exceptions: 0
+```
+
