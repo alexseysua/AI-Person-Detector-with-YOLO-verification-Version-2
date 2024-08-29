@@ -590,13 +590,13 @@ def main():
     # but its too much for a GTX950 and "m" running on openvino i3 iGPU seemed just as good
     # in a parallel run using the same rtsp streams, too many drops with "x" model on GTX950.
     # Realistically GTX950 is about as low as we can go, I may make this selection a command
-    # line parameter eventually, but "l" needs twice the Flops for 1.7 gain in mAPval.
-    Model	    Pixels  mAPval  CPU(mS)  A100(nS)   #parms  Flops
-    YOLOv8n	    640	    37.3	80.4	 0.99	    3.2	    8.7
-    YOLOv8s	    640	    44.9	128.4	 1.20	    11.2	28.6
-    YOLOv8m	    640	    50.2	234.7	 1.83	    25.9	78.9
-    YOLOv8l	    640	    52.9	375.2	 2.39	    43.7	165.2
-    YOLOv8x	    640 	53.9	479.1	 3.53	    68.2	257.8
+    # line parameter eventually, but "l" needs twice the Flops for 2.7 gain in mAPval.
+    Model	    Pixels  mAPval  CPU(mS)  A100(nS)   #parms(M)   Flops(B)
+    YOLOv8n	    640	    37.3	80.4	 0.99	    3.2	        8.7
+    YOLOv8s	    640	    44.9	128.4	 1.20	    11.2	    28.6
+    YOLOv8m	    640	    50.2	234.7	 1.83	    25.9	    78.9
+    YOLOv8l	    640	    52.9	375.2	 2.39	    43.7	    165.2
+    YOLOv8x	    640 	53.9	479.1	 3.53	    68.2	    257.8
     '''
     if yolo8_verify:
         #import Ultralytics yolo8
