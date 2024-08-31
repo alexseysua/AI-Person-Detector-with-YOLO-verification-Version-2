@@ -1,5 +1,7 @@
 # AI-Person-Detector-with-YOLO-verification-Version-2
-This is "Version 2" of the repo: https://github.com/wb666greene/AI-Person-Detector-with-YOLO-Verification.  The major difference is a much easier install since nearly everything can be done with PIP and a python virtual environment.  All the support for old hardware not capable of running yolo8 has been removed, since yolo8 is the key to the very low false alert rate.  I've tested it on Ubuntu 20.04 and 22.04, other Linux distributions with openvino and/or cuda support should work.
+This is "Version 2" of the repo: https://github.com/wb666greene/AI-Person-Detector-with-YOLO-Verification.  The major difference is a much easier install since nearly everything can be done with PIP and a python virtual environment.  All the support for old hardware not capable of running yolo8 has been removed, since yolo8 is the key to the very low false alert rate.  I've tested it on Ubuntu 20.04 and 22.04, other Linux distributions with openvino and/or cuda support should work.  
+### New 31AUG2024:
+Everything is now pip installable in a virtual environment, so running it on Windows or WSL shouldn't be too difficult, it is not anything I'm interested in doing, but if you manage to run it on Windows or WSL please submit your instructions/patches so I can add them here.  Raise issues and I'll try to help out, especially if I broke Windows/Linux compatability in my python code (which is likely becasue of file naming conventions, especially case sensitivity).
 
 These are my notes for a virgin installation of Ubuntu 22.04 and installation of OpenVINO 2024.3 release 
 for using Intel integrated GPU or Nvidia GPU for yolo verification.  Motivated by 
@@ -19,7 +21,7 @@ I used Ubuntu-Mate.  Customize it as you see fit.
 
 If you are new to Linux, first thing after installing Ubuntu-Mate, go through the "Welcome" tutorial to learn the basics and then go to the "Control Center" and open "MATE Tweak" and from the sidebar select "Panel".  If you choose "Redmon" from the dropdown you'll get a destop that resembles Windows, if you choose "Cupetino" you'll get a Mac-like desktop.  If you can tolerate the Ubuntu "Unity" Desktop, fine, but I can't, and if coming from Windows or Mac be prepared for "eveything you know is wrong" when it comes to using the Unity desktop UI.
 
-All my Python code, OpenVINO, node-red, Coral TPU drivers (if you need/want them) and CUDA (if you are using nVidia GPU instead of Intel) should be available on Windows, but I've not tested it.  But you'll lose the "housekeeping" functionality in some shell scripts that are called via node-red exec nodes in my minimal web based "controller".  Minimal is a design feature, I wanted a "set and forget" appliance that runs 24/7/365 and is controlled by your "home automation" or a web browser to set one of three modes of operation.  "Notify" mode sends Email and audio alerts,  "Audio" uses "Espeak" speech synthsizer to announce what camera a person has been detected on, and Idle just saves detection without any nodifications.  If you manage to run it on Windows please submit your instructions so I can add them here.
+All my Python code, OpenVINO, node-red, Coral TPU drivers (if you need/want them) and CUDA (if you are using nVidia GPU instead of Intel) should be available on Windows, but I've not tested it.  But you'll lose the "housekeeping" functionality in some shell scripts that are called via node-red exec nodes in my minimal web based "controller".  Minimal is a design feature, I wanted a "set and forget" appliance that runs 24/7/365 and is controlled by your "home automation" or a web browser to set one of three modes of operation.  "Notify" mode sends Email and audio alerts,  "Audio" uses "Espeak" speech synthsizer to announce what camera a person has been detected on, and Idle just saves detection without any nodifications.
 
 Use your username where I have "ai" and your hostname where I have "YouSeeX1".
 To avoid having to edit the scripts used by node-red make a sym link in /home:
@@ -28,7 +30,7 @@ sudo ln -s /home/YourUserName /home/ai
 ```
 
 # 1) Install needed packages
-I like loging in remotely over via ssh, as running "headless" is a design goal, but it can all be done with a termenal window as well. OpenSSH is not installed by default so either install "OpenSSH" using "Control Center Software Boutique" or in a terminal window do:
+I like loging in remotely over via ssh, as running "headless" is a design goal, but it can all be done with a terminal window as well. OpenSSH is not installed by default so either install "OpenSSH" using "Control Center Software Boutique" or in a terminal window do:
 ```
 sudo apt install ssh
 ```
@@ -71,56 +73,59 @@ sudo adduser $USER render
 Now log out and login or reboot the system. GPU doesn't work if you don't do this!
 Instructions for using CUDA will be given below, but you will still need OpenVINO for the MobilenetSSD_v2 initial AI if not using the Coral TPU, whos instructions are also given below.
 
+
 ## 2b) Install CUDA and create virtual environment:
-First install cuda. I'm not a cuda expert, this is what I installed on my i9-12900 development system with RTX3070.
+### 31AUG2024, I learned that CUDA is now pip installable, making the setup very similar to the openvino version.
+First install cuda. I'm not a cuda expert, this is what I installed on an i3-10100F with GTX950.  
+Nice background is here, but you can skip all these and just do the pip installation:
+```
+https://docs.nvidia.com/cuda/cuda-quick-start-guide/index.html#linux  # Use sidebar to select "3.1.9 Ubuntu-->3.1.9.2 Runfile Installer"
+https://docs.nvidia.com/cuda/cuda-installation-guide-linux/
+https://developer.nvidia.com/cuda-toolkit-archive
+
+# My initial success with cuda and cudnn came from what I learned from these:
+https://medium.com/@juancrrn/installing-cuda-and-cudnn-in-ubuntu-20-04-for-deep-learning-dad8841714d6
+https://davidblog.si/2022/12/24/setting-up-cuda-and-cudnn-in-ubuntu-22-04/
+```
+I think it is safest to use the Ubuntu repo version of the nvidia driver. I always choose the driver marked "tested" which in this case was nvidia-driver-535 using the "Additional Drivers" tab in the "Software & Updates" app if Noveau driver was installed by default.  Install it and reboot the system. Open a terminal and run the nvidia-smi command, if it works, so far so good.  
+
+## Make the virtual environment for CUDA:
 Get the latest PyTorch here: https://pytorch.org/get-started/locally/
 Older versions (what I used): https://pytorch.org/get-started/previous-versions/
-The websites give you a pip install command you can cut and paste to install your version of torch with cuda support.
+The websites give you a pip install command you can cut and paste to install your version of torch with cuda support that you use below after the pip install nvidia-cuda-runtime-cu12.
 
-### Setup CUDA:
-I think it is safest to use the Ubuntu repo version of the nvidia driver and install cuda from downloaded Nvidia deb file.
-Install the cuda toolkit:
-```
-sudo apt install nvidia-cuda-toolkit
-```
-Download from the NVidia site: cuda-repo-ubuntu2204-11-7-local_11.7.1-515.65.01-1_amd64.deb
-Note that this depends on the Nvidia driver you've installed, I used 510.108.03 which is not the "latest", but when I did
-it on a "virgin" system it seemed to installed driver 515.105.01, which required a reboot for nvidia-smi to work
-```
-sudo dpkg -i Downloads/cuda-repo-ubuntu2204-11-7-local_11.7.1-515.65.01-1_amd64.deb
-sudo cp /var/cuda-repo-ubuntu2204-11-7-local/cuda-F83D2C4C-keyring.gpg /usr/share/keyrings/
-sudo apt update
-sudo apt-get -y install cuda
-```
-Next install the CUDNN:
-Download: cudnn-linux-x86_64-8.4.1.50_cuda11.6-archive.tar.xz from Nvidia site,
-Extract the archive from the file manager and copy the include and lib directories to /usr/local
-```
-cd Downloads/cudnn-linux-x86_64-8.4.1.50_cuda11.6-archive
-sudo mkdir /usr/local/cuda-11.7
-sudo cp -a include /usr/local/cuda-11.7
-sudo cp -a lib /usr/local/cuda-11.7
-```
-CUDA is like OpenVINO, quite dynamic, so my notes here from about two years ago may not be the best bet now,  I'll happily accept updates to these instructions!
-## Make the virtual environment for CUDA:
 ```
 python3 -m venv y8cuda
 source y8cuda/bin/activate
 # promp changes to: (y8cuda)
-pip install -U pip setuptools
-pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
-pip install TPU_python3.10/tflite_runtime-2.5.0.post1-cp310-cp310-linux_x86_64.whl
-pip install TPU_python3.10/pycoral-2.0.0-cp310-cp310-linux_x86_64.whl
+pip install --upgrade setuptools pip wheel
+pip install nvidia-pyindex
+pip install nvidia-cuda-runtime-cu12
+pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu121
 pip install imutils paho-mqtt requests
 pip install opencv-python
 pip install "openvino>=2024.2.0" "nncf>=2.9.0"
 pip install ultralytics
+# Only if uisng TPU
+pip install TPU_python3.10/tflite_runtime-2.5.0.post1-cp310-cp310-linux_x86_64.whl
+pip install TPU_python3.10/pycoral-2.0.0-cp310-cp310-linux_x86_64.whl
 ```
+In the virtual environment test the cuda/pytorch install with:
+```
+(y8cuda) ai@GTX950:~$ python
+Python 3.10.12 (main, Jul 29 2024, 16:56:48) [GCC 11.4.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import torch
+>>> torch.cuda.is_available()
+True
+>>> #Ctrl-d to exit
+```
+
 
 # 3) Clone this repo
 ```
-sudo git clone https://github.com/wb666greene/AI-Person-Detector-with-YOLO-verification-Version-2.git
-mv https://github.com/wb666greene/AI-Person-Detector-with-YOLO-verification-Version-2 AI
+git clone https://github.com/wb666greene/AI-Person-Detector-with-YOLO-verification-Version-2.git
+mv AI-Person-Detector-with-YOLO-verification-Version-2 AI2
 ```
 #### Don't skip the mv (rename) of the directory to AI2, otherwise you'll need to edit the node-red scripts to account for the different names. 
 
@@ -185,7 +190,7 @@ source y8cuda/bin/activate
 python AI2.py -d -y8v
 ```
 This will start a thread for each video camaera and an OpenVINO CPU AI thread and display live results on the screen.  Here is an image of it running on a Lenovo IdeaPad i3 laptop doing six Onvif cameras:
-![IdeaPad](https://github.com/user-attachments/assets/647f3c54-a265-406a-833d-0ef1a2883eec)  Notifications and the housekeeping functions are done with node-red which we will install next.  Press Ctrl-C in the terminal window to exit the AI python code.
+![IdeaPad](https://github.com/user-attachments/assets/647f3c54-a265-406a-833d-0ef1a2883eec)  Notifications and the housekeeping functions are done with node-red which we will install next.  Press Ctrl-C in the terminal window to exit the AI python code.  My GTX950 had a YOLO8 inference time of about 59 mS with about 5 mS pre & post processing times.
 
 # 4) Install Node-red
 Node-red has a very active and helpful community with lots of good tutorials, a vist to their support forum is recommended: https://discourse.nodered.org/
