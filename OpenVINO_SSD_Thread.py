@@ -62,7 +62,7 @@ def AI_thread(resultsQ, inframe, net, tnum, cameraLock, nextCamera, Ncameras,
         if os.path.exists('mobilenet_ssd_v2/ssd_mobilenet_v2_coco_2018_03_29.xml'): # ov converted and saved model from 2018 
             model_path = 'mobilenet_ssd_v2/ssd_mobilenet_v2_coco_2018_03_29.xml'
         else:
-            if os.path.exists('../ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.xml'):
+            if os.path.exists('../ssd_mobilenet_v2_coco_2018_03_29'):
                 print('[INFO] Converting downloaded ssd_mobilenet_v2_coco_2018_03_29 model, be patient ...')
                 model = ov.convert_model('../ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb')
                 print('[INFO] Saving converted mode, so this step can be skipped on the next program run.')
