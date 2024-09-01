@@ -507,5 +507,8 @@ OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 1196 dropped: 405 of 197225 i
     ovCPU 15834 detections failed zoom-in verification.
     ovCPU Detections dropped: 0, results dropped: 405, resultsQ.put() exceptions: 0
 
-This ystem easily handles 8 cameras at ~3fps per camera.
+# This system easily handles 8 cameras at ~3fps per camera, although this could be
+# near the practical limit since the yolo thread is dropping some verified frames (~1%).
+# I have overlapping camera views so a person can be in the view of two cameras at the
+# time, which increases the load on the yolo thread.
 ```
