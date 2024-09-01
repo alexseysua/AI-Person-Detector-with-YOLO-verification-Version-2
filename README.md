@@ -453,67 +453,74 @@ This system cost me ~$160 as an "openbox close-out" at Microcenter when 12th gen
 Using four 4K rtsp streams at ~3 fps per camera for a test run, with node-red installed and running command:
 ```
 (y8ovv) python AI2.py -d -nsz -y8ovv # -nsz doesn't save zoomed images, since the node-red does it.
-
 [INFO] Program Exit signal received:  2024-08-29 15:26:01
 *** AI processing approx. FPS: 12.83 ***
     [INFO] Run elapsed time: 69751.02
     [INFO] Frames processed by AI system: 894734
     [INFO] Person Detection by AI system: 1643
     [INFO] Main loop waited for resultsQ: 272851 times.
-
 [INFO] Stopping OpenVINO yolo8 verification Thread ...
 Yolo v8 frames Verified: 1643, Rejected: 365,  Waited: 68934 seconds.
     Verified dropped: 0, results dropped: 0, results.put() exceptions: 0
-
 [INFO] Stopping openvino CPU AI  Thread ...
 OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 174222 dropped: 162 of 894906 images.  AI: 13.07 inferences/sec
     ovCPU Persons Detected: 2008,  Frames with no person: 892898
     ovCPU 15682 detections failed zoom-in verification.
     ovCPU Detections dropped: 0, results dropped: 162, resultsQ.put() exceptions: 0
 
+# As above but but with six 4K cameras and two 5Mpixel cameras:
+[INFO] Program Exit signal received:  2024-09-01 16:31:13
+*** AI processing approx. FPS: 16.18 ***
+    [INFO] Run elapsed time: 11962.06
+    [INFO] Frames processed by AI system: 193522
+    [INFO] Person Detection by AI system: 397
+    [INFO] Main loop waited for resultsQ: 10323 times.
+[INFO] Stopping OpenVINO yolo8 verification Thread ...
+Yolo v8 frames Verified: 397, Rejected: 47,  Waited: 11768 seconds.
+    Verified dropped: 0, results dropped: 0, results.put() exceptions: 0 
+OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 1278 dropped: 343 of 193875 images.  AI: 17.16 inferences/sec
+    ovCPU Persons Detected: 444,  Frames with no person: 193431
+    ovCPU 12130 detections failed zoom-in verification.
+    ovCPU Detections dropped: 0, results dropped: 343, resultsQ.put() exceptions: 0
+# At only ~16fps instead of the expected ~24fps from the eight cameras, it looks like eight cameras
+# is too much for this system.  For this system I'd say that six 4K cameras is about the max.
 
-# As above but but with six 4K cameras and two 5Mpixel cameras
+# Repeat above test with USB3 TPU and the same eight cameras:
+(y8ovv) python AI2.py -d -nsz -y8ovv -tpu
 
 ```
 ### Intel i3-10100F @3.6 GHz 4 cores, NVidia GTX950 graphics (768 cuda cores), 16 GB RAM, Mate 22.04
 Using four 4K rtsp streams at ~3 fps per camera for a test run, without node-red installed, running command:
 ```
 (y8cuda) python AI2.py -d -y8v
-
 [INFO] Program Exit signal received:  2024-09-01 10:07:48
 *** AI processing approx. FPS: 12.95 ***
     [INFO] Run elapsed time: 73886.00
     [INFO] Frames processed by AI system: 956514
     [INFO] Person Detection by AI system: 2923
     [INFO] Main loop waited for resultsQ: 344086 times.
-
 [INFO] Stopping CUDA yolo8 verification Thread ...
 Yolo v8 frames Verified: 2923, Rejected: 336,  Waited: 72746 seconds.
-    Verified dropped: 0 results dropped: 0 results.put() exceptions: 0
-    
+    Verified dropped: 0 results dropped: 0 results.put() exceptions: 0 
 [INFO] Stopping openvino CPU AI  Thread ...
 OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 209732 dropped: 145 of 956669 images.  AI: 13.46 inferences/sec
     ovCPU Persons Detected: 3259,  Frames with no person: 953410
     ovCPU 35381 detections failed zoom-in verification.
     ovCPU Detections dropped: 0, results dropped: 145, resultsQ.put() exceptions: 0
 
-
-# As above but but with six 4K cameras and two 5Mpixel cameras
+# As above but but with six 4K cameras and two 5Mpixel cameras:
 [INFO] Program Exit signal received:  2024-09-01 13:03:20
 *** AI processing approx. FPS: 24.05 ***
     [INFO] Run elapsed time: 8181.96
     [INFO] Frames processed by AI system: 196799
     [INFO] Person Detection by AI system: 951
     [INFO] Main loop waited for resultsQ: 6890 times.
-
 Yolo v8 frames Verified: 961, Rejected: 80,  Waited: 7853 seconds.
     Verified dropped: 10 results dropped: 1 results.put() exceptions: 0
-    
 OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 1196 dropped: 405 of 197225 images.  AI: 25.97 inferences/sec
     ovCPU Persons Detected: 1041,  Frames with no person: 196184
     ovCPU 15834 detections failed zoom-in verification.
     ovCPU Detections dropped: 0, results dropped: 405, resultsQ.put() exceptions: 0
-
 # This system easily handles 8 cameras at ~3fps per camera, although this could be
 # near the practical limit since the yolo thread is dropping some verified frames (~1%).
 # I have overlapping camera views so a person can be in the view of two cameras at the
