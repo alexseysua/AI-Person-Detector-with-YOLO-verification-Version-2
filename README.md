@@ -439,13 +439,13 @@ https://github.com/bluecherrydvr/unity
 
 
 # 8) Some performance summaries on different hardware.
-Note: "dropped" is number of detections that were dropped because writing to the output queue timed out, "results dropped" are frames without detection that were dropped writing to the output queue, the time out is much shorter for frames with no detection. Dropping an image without a person detected only has consequences for the live display.  The "detections failed zoom-in verification" are frames with a person that failed the Mobilenet detection when frame was cropped around the detected person and then failed the re-detect, this can greatly reduce the load on the Yolo thread.  These are most common with fixed objects in the frame that mis-detect as a person when the light is just "right", these tend to come in bursts of seconds to minutes usually as the sun is rising, setting, or approaching noon.
+Note: "dropped" is number of detections that were dropped because writing to the output queue timed out, "results dropped" are frames without detection that were dropped writing to the output queue, the time out is much shorter for frames with no detection. Dropping an image without a person detected only has consequences for the live display.  The "detections failed zoom-in verification" are frames with a person that failed the Mobilenet detection when frame was cropped around the detected person and then failed the re-detect, this can greatly reduce the load on the Yolo thread.  These are most common with fixed objects in the frame that mis-detect as a person when the light is just "right", these tend to come in bursts of seconds to minutes long, usually as the sun is rising, setting, or approaching noon.
 
 ### Lenovo Ideapad3 i3-1115GS4 @3 Ghz 4 cores, Mesa UHD graphics (TGL GT2), 8GB RAM, Ubuntu-Mate 20.04
 This system cost me ~$160 as an "openbox close-out" at Microcenter when 12th gen systems were released.
 Using four 4K rtsp streams at ~3 fps per camera for a test run, with node-red installed and running command:
 ```
-(y8ovv) python AI2.py -d -nsz -y8ovv
+(y8ovv) python AI2.py -d -nsz -y8ovv # -nsz doesn't save zoomed images, since the node-red does it.
 
 [INFO] Program Exit signal received:  2024-08-29 15:26:01
 *** AI processing approx. FPS: 12.83 ***
@@ -463,9 +463,13 @@ OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 174222 dropped: 162 of 894906
     ovCPU Persons Detected: 2008,  Frames with no person: 892898
     ovCPU 15682 detections failed zoom-in verification.
     ovCPU Detections dropped: 0, results dropped: 162, resultsQ.put() exceptions: 0
+
+
+# As above but but with six 4K cameras and two 5Mpixel cameras
+
 ```
-### Intel i3-10100F @3.6 GHz 4 cores, NVidia GTX950 graphics 768 cuda cores 16 GB RAM, Mate 22.04
-Using four 4K rtsp streams at ~3 fps per camera for a test run, with node-red installed and running command:
+### Intel i3-10100F @3.6 GHz 4 cores, NVidia GTX950 graphics (768 cuda cores), 16 GB RAM, Mate 22.04
+Using four 4K rtsp streams at ~3 fps per camera for a test run, without node-red installed, running command:
 ```
 (y8cuda) python AI2.py -d -y8v
 
@@ -485,4 +489,23 @@ OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 209732 dropped: 145 of 956669
     ovCPU Persons Detected: 3259,  Frames with no person: 953410
     ovCPU 35381 detections failed zoom-in verification.
     ovCPU Detections dropped: 0, results dropped: 145, resultsQ.put() exceptions: 0
+
+
+# As above but but with six 4K cameras and two 5Mpixel cameras
+[INFO] Program Exit signal received:  2024-09-01 13:03:20
+*** AI processing approx. FPS: 24.05 ***
+    [INFO] Run elapsed time: 8181.96
+    [INFO] Frames processed by AI system: 196799
+    [INFO] Person Detection by AI system: 951
+    [INFO] Main loop waited for resultsQ: 6890 times.
+
+Yolo v8 frames Verified: 961, Rejected: 80,  Waited: 7853 seconds.
+    Verified dropped: 10 results dropped: 1 results.put() exceptions: 0
+    
+OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 1196 dropped: 405 of 197225 images.  AI: 25.97 inferences/sec
+    ovCPU Persons Detected: 1041,  Frames with no person: 196184
+    ovCPU 15834 detections failed zoom-in verification.
+    ovCPU Detections dropped: 0, results dropped: 405, resultsQ.put() exceptions: 0
+
+This ystem easily handles 8 cameras at ~3fps per camera.
 ```
