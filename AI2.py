@@ -581,7 +581,8 @@ def main():
 
 
     if nCoral is False and nCPUthreads is False:
-        print("\n[INFO] No Coral TPU or OpenVINO devices specified,  forcing one CPU AI thread.")
+        client.publish("AI/Status", "[INFO] No Coral TPU device specified, forcing CPU thread.", 2, True)
+        print("\n[INFO] No Coral TPU device specified,  forcing one CPU AI thread.")
         nCPUthreads=True   # we always can force one CPU thread, but ~1.8 seconds/frame on Pi3B+
 
     # these need to be loaded before an AI thread launches them
@@ -625,6 +626,8 @@ def main():
         model = Coral_TPU_Thread.make_interpreter(modelPath)    # if both installed can't predict which will be used.
         ##model = Coral_TPU_Thread.make_interpreter(modelPath, "usb")   # choose usb TPU if both installed
         ##model = Coral_TPU_Thread.make_interpreter(modelPath, "pci")   # use pci TPU if both installed
+        ##model = Coral_TPU_Thread.make_interpreter(classification_model, device=':0')
+        ##model = Coral_TPU_Thread.make_interpreter(detection_model, device=':1')
         model.allocate_tensors()
 
         # *** start Coral TPU threads
@@ -643,7 +646,8 @@ def main():
             sleepCount+=1
             time.sleep(1.0)
             if sleepCount >= 15:
-                print('[ERROR] OpenVINO_SSD_Thread failed to start, exiting...')
+                client.publish("AI/Status", "[ERROR] Coral_TPU_Thread failed to start, exiting...", 2, True)
+                print('[ERROR] Coral_TPU_Thread failed to start, exiting...')
                 quit()
 
 
@@ -666,6 +670,7 @@ def main():
             sleepCount+=1
             time.sleep(1.0)
             if sleepCount >= 15:
+                client.publish("AI/Status", "[ERROR] OpenVINO_SSD_Thread failed to start, exiting...", 2, True)
                 print('[ERROR] OpenVINO_SSD_Thread failed to start, exiting...')
                 quit()
             
@@ -684,7 +689,8 @@ def main():
             sleepCount+=1
             time.sleep(1.0)
             if sleepCount >= 15:
-                print('[ERROR] OpenVINO_SSD_Thread failed to start, exiting...')
+                print('[ERROR] OpenVINO yolo8 thread failed to start, exiting...')
+                client.publish("AI/Status", "[ERROR] OpenVINO yolo8 thread failed to start, exiting...", 2, True)
                 quit()
         print("[INFO] OpenVINO yolo_v8 verification thread is running. ")
 
@@ -701,7 +707,8 @@ def main():
             sleepCount+=1
             time.sleep(1.0)
             if sleepCount >= 15:
-                print('[ERROR] OpenVINO_SSD_Thread failed to start, exiting...')
+                client.publish("AI/Status", "[ERROR] Cuda yolo8 thread failed to start, exiting...", 2, True)
+                print('[ERROR] Cuda yolo8 thread failed to start, exiting...')
                 quit()
         print("[INFO] Ultralytics yolo_v8 verification thread is running. ")
 
