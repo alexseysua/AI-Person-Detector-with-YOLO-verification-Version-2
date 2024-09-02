@@ -448,7 +448,7 @@ https://github.com/bluecherrydvr/unity
 # 8) Some performance summaries on different hardware.
 Note: "dropped" is number of detections that were dropped because writing to the output queue timed out, "results dropped" are frames without detection that were dropped writing to the output queue, the time out is much shorter for frames with no detection. Dropping an image without a person detected only has consequences for the live display.  The "detections failed zoom-in verification" are frames with a person that failed the Mobilenet detection when frame was cropped around the detected person and then failed the re-detect, this can greatly reduce the load on the Yolo thread.  These are most common with fixed objects in the frame that mis-detect as a person when the light is just "right", these tend to come in bursts of seconds to minutes long, usually as the sun is rising, setting, or approaching noon.
 
-### Lenovo Ideapad3 i3-1115GS4 @3 Ghz 4 cores, Mesa UHD graphics (TGL GT2), 8GB RAM, Ubuntu-Mate 20.04
+### Lenovo Ideapad3 i3-1115GS4 @3Ghz 4 cores, Mesa UHD graphics (TGL GT2), 8GB RAM, Ubuntu-Mate 20.04
 This system cost me ~$160 as an "openbox close-out" at Microcenter when 12th gen systems were released.
 Using four 4K rtsp streams at ~3 fps per camera for a test run, with node-red installed and running command:
 ```
@@ -487,9 +487,24 @@ OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 1278 dropped: 343 of 193875 i
 
 # Repeat above test with USB3 TPU and the same eight cameras:
 (y8ovv) python AI2.py -d -nsz -y8ovv -tpu
+[INFO] Program Exit signal received:  2024-09-01 19:56:41
+*** AI processing approx. FPS: 24.09 ***
+    [INFO] Run elapsed time: 11532.35
+    [INFO] Frames processed by AI system: 277863
+    [INFO] Person Detection by AI system: 1199
+    [INFO] Main loop waited for resultsQ: 49168 times.
 
+Yolo v8 frames Verified: 1199, Rejected: 89,  Waited: 11119 seconds.
+    Verified dropped: 0, results dropped: 0, results.put() exceptions: 0
+
+TPU, waited: 45124 dropped: 553 out of 278426 images.  AI: 24.85 inferences/sec
+   TPU Persons Detected: 1288,  Frames with no person: 277138
+   TPU 8555 TPU detections failed zoom-in verification.
+   TPU Detections dropped: 0, results dropped: 553, results.put() exceptions: 0
+# Adding the $60 USB3 TPU (~$30 if you have M.2 slot available) has at least
+# doubled the number of 4K cameras that can be supported on a somewhat weak processor.
 ```
-### Intel i3-10100F @3.6 GHz 4 cores, NVidia GTX950 graphics (768 cuda cores), 16 GB RAM, Mate 22.04
+### Intel i3-10100F @3.6GHz 4 cores, NVidia GTX950 graphics (768 cuda cores), 16 GB RAM, Mate 22.04
 Using four 4K rtsp streams at ~3 fps per camera for a test run, without node-red installed, running command:
 ```
 (y8cuda) python AI2.py -d -y8v
@@ -526,3 +541,32 @@ OpenVINO CPU MobilenetSSD AI thread ovCPU, waited: 1196 dropped: 405 of 197225 i
 # I have overlapping camera views so a person can be in the view of two cameras at the
 # time, which increases the load on the yolo thread.
 ```
+### IOT class, YouYeeTwoX1, Celeron N5105 @2GHz 4 cores Mesa UHD graphics (JSL), 8GB RAM, M.2 TPU Mate 22.04
+Using four 4K rtsp streams at ~3fps per camera, node-red installed, no VENV, running command:
+```
+python3 AI2.py -tpu -nsz -d -y8ovv
+[INFO] Program Exit signal received:  2024-09-01 20:13:24
+*** AI processing approx. FPS: 13.86 ***
+    [INFO] Run elapsed time: 10667.59
+    [INFO] Frames processed by AI system: 147845
+    [INFO] Person Detection by AI system: 769
+    [INFO] Main loop waited for resultsQ: 62097 times.
+
+Yolo v8 frames Verified: 769, Rejected: 20,  Waited: 10407 seconds.
+    Verified dropped: 0, results dropped: 0, results.put() exceptions: 0
+
+TPU, waited: 59899 dropped: 159 out of 148014 images.  AI: 14.65 inferences/sec
+   TPU Persons Detected: 789,  Frames with no person: 147225
+   TPU 8182 TPU detections failed zoom-in verification.
+   TPU Detections dropped: 0, results dropped: 159, results.put() exceptions: 0
+# Easily supports 4UHD (4K) cameras, not very usable without Coral TPU.
+# This board is ~$160, by time you add M.2 TPU, power supply and M.2 SSD
+# you are over $230, which is why I've lost interest in IOT class hardware
+# and think "last year's model bottom of the line" laptop close-outs or
+# "buisness class" refubished laptops are a better bet if cost matters
+# more than physical space, since basically has to be "headless" if cost matters.
+```
+Here is a photo of the YouYeeTwoX1, it is a bit larger than a RasperryPi:
+![YouyeetooX1](https://github.com/user-attachments/assets/54c51644-a9e0-4af6-bb9f-7d885c1ffd94)
+
+
