@@ -426,6 +426,15 @@ https://zoneminder.com/
 
 https://github.com/ZoneMinder/zoneminder
 
+## Motion, Motion Plus
+Another long running project, I used it to turn a RaspberryPi Zero W with PiCam into a WiFi connected camera that rode on my friend's model RailRoad.  It has continued to evolve, adding object detecion with OpenCV HOG, Haar, and DNN modules.
+
+https://motion-project.github.io/index.html
+
+The most interesting new feature in Motion Plus is "Sound Frequency Processing" where it can listen for certain audio frequency ranges and send an alert when detected.
+
+https://motion-project.github.io/motionplus_examples.html#sound_sample
+
 ## iSpy
 Another "full featured" DVR/NVR replacement available for Windows, OSX and Linux.
 I've run into it when searching for camera URLs they have a pretty large database of these.
