@@ -374,12 +374,12 @@ ln -s /media/ai/AI detect
 ```
 Reboot and verify the external drive is mounted.
 
-#### I also like to setup a samba server so you can view the detection images from other machines on your local subnet.
+### I also like to setup a samba server so you can view the detection images from other machines on your local subnet.
 Configue samba file sharing.  Since this is to be an "appliance" this is the best way to look at AI detection files, edit samba config:
 ```
 sudo nano /etc/samba/smb.conf
 ```
-Add this is in the [global] section:
+#### Add this is in the [global] section:
 ```
     mangled names = no
     follow symlinks = yes
@@ -389,7 +389,7 @@ Add this is in the [global] section:
     server min protocol = NT1
     client min protocol = NT1
 ```
-Make the homes section be like this:
+#### Make the homes section be like this:
 ```
 [homes]
    comment = Home Directories
