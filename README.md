@@ -568,6 +568,4 @@ TPU, waited: 59899 dropped: 159 out of 148014 images.  AI: 14.65 inferences/sec
 ```
 Here is a photo of the YouYeeTwoX1, it is a bit larger than a RasperryPi:
 ![YouyeetooX1](https://github.com/user-attachments/assets/54c51644-a9e0-4af6-bb9f-7d885c1ffd94)
-Running headless, only the coaxial power connector and Ethernet cable would be plugged in.
-
-
+Running headless, only the coaxial power connector and Ethernet cable would be plugged in, along with a powered speaker, not shown in the photo, if you want audio (usually you will).
