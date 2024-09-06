@@ -8,9 +8,8 @@ import datetime
 from PIL import Image
 from imutils.video import FPS
 
-
 global aiStr
-global __PYCORAL__
+
 global __Thread__
 __Thread__ = False
 
@@ -23,6 +22,7 @@ __DEBUG__ = False
 global __Color__
 __Color__ = (0, 200, 200)
 
+global model
 
 try:
         from pycoral.adapters.common import input_size
@@ -31,30 +31,47 @@ try:
         from pycoral.utils.edgetpu import make_interpreter
         from pycoral.utils.edgetpu import run_inference
         from pycoral.utils.edgetpu import get_runtime_version
+        from pycoral.utils.edgetpu import list_edge_tpus
         edgetpu_version=get_runtime_version()
-        __PYCORAL__ = 16    #deb version 16.0
         print("PyCoral version: " + __import__("pycoral").__version__)
 except ImportError:
-        print("[INFO]: PyCoral v.16 is not installed, trying v.15")
-        try:
-            from pycoral.adapters import common, detect
-            from pycoral.utils.dataset import read_label_file
-            from pycoral.utils.edgetpu import make_interpreter, get_runtime_version
-            edgetpu_version=get_runtime_version()
-            __PYCORAL__ = 15    # deb version 15.0
-            print("PyCoral version: " + __import__("pycoral").__version__)
-        except ImportError:
-            print("[ERROR]: PyCoral TPU support is not installed, exiting ...")
-            quit()
-
-print('Edgetpu_api version: ' + edgetpu_version)
-
-
+        print("[INFO]: PyCoral is not installed! Exiting ...")
+        quit()
+        
 
 '''
-one time gode to run when thread is launched.
+one time code to run when thread is launched.
 '''
 def threadInit():
+    global model
+
+    try:
+        print('Edgetpu_api version: ' + edgetpu_version)
+        # list installed tpus, and figure out if any are M.2 (pci)
+        pci_tpu = list()
+        usb_tpu = list()
+        tpus = list_edge_tpus()
+        print(tpus)
+        for i in range(len(tpus)):
+            if tpus[i]['type'] == 'pci': pci_tpu.append(i)
+            if tpus[i]['type'] == 'usb': usb_tpu.append(i)
+        print("[INFO] parsing mobilenet_ssd_v2 coco class labels for Coral TPU...")
+        labels = read_label_file("mobilenet_ssd_v2/coco_labels.txt")
+        modelPath = "mobilenet_ssd_v2/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite"
+        if len(pci_tpu) >=1:    # use PCI TPU for SSD, reserve M.2 for yolo8, Or should it be the other way?
+            print('[INFO] Using PCI/M.2 TPU for MobilenetSSD_v2 AI inference.')
+            model = make_interpreter(modelPath, "pci")
+        else:
+            model = make_interpreter(modelPath)    # if both M.2 & USB installed can't predict which will be used.
+        ##model = Coral_TPU_Thread.make_interpreter(modelPath, "usb")   # choose usb TPU if both installed
+        ##model = Coral_TPU_Thread.make_interpreter(modelPath, "pci")   # use pci TPU if both installed
+        ##model = Coral_TPU_Thread.make_interpreter(classification_model, device=':0')
+        ##model = Coral_TPU_Thread.make_interpreter(detection_model, device=':1')
+        model.allocate_tensors()
+    except Exception as e:
+        print(e)
+        print("[ERROR] Couldn't instance TPU model!  Exiting ...")
+        quit()  
     return
 
 
@@ -76,14 +93,8 @@ def do_inference( image, model, PREPROCESS_DIMS, confidence, blobThreshold ):
         personDetected = False
         (H,W)=image.shape[:2]
         frame_rgb = cv2.cvtColor(cv2.resize(image, PREPROCESS_DIMS), cv2.COLOR_BGR2RGB)
-        if __PYCORAL__ == 15:  ## I may no longer need this
-            frame = Image.fromarray(frame_rgb)
-            common.set_input(model,frame)
-            model.invoke()
-            detection=detect.get_objects(model, confidence, (1.0,1.0))
-        else:
-            run_inference(model, frame_rgb.tobytes())
-            detection=get_objects(model, confidence, (1.0,1.0))
+        run_inference(model, frame_rgb.tobytes())
+        detection=get_objects(model, confidence, (1.0,1.0))
         # loop over the detection results
         detectConfidence = 0.0
         for r in detection:
@@ -125,13 +136,14 @@ def do_inference( image, model, PREPROCESS_DIMS, confidence, blobThreshold ):
 '''
 This should be pure "boilerplate" with no changes necessary
 '''
-def AI_thread(results, inframe, model, tnum, cameraLock, nextCamera, Ncameras,
+def AI_thread(results, inframe, cameraLock, nextCamera, Ncameras,
                 PREPROCESS_DIMS, confidence, verifyConf, dnnStr, blobThreshold, yoloQ):
     global __Thread__
     global aiStr
     global __VERIFY_DIMS__
     global __DEBUG__
     global __Color__
+    global model
     
     aiStr=dnnStr
     waits=0
@@ -142,7 +154,10 @@ def AI_thread(results, inframe, model, tnum, cameraLock, nextCamera, Ncameras,
     dcnt=0
     ncnt=0
     ecnt=0
+    
+    print('Initializing TPU model')
     threadInit()
+    
     print( aiStr + " AI thread" + " is running...")
     if yoloQ is not None:
         print("    TPU AI thread is using yolo verification.")

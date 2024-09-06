@@ -51,5 +51,9 @@ export PYTHONUNBUFFERED=1
 #python3 AI2.py -nsz -d -y8ovv  -dw 1920 -dh 1080 -iw 944 -ih 531 2>/dev/null >> ../detect/`/bin/date +%F`_AI.log &
 
 # CPU initial AI detection with yolo8 Cuda verification
-source ../y8cuda/bin/activate
-python3 AI2.py -nsz -d -y8v 2>/dev/null >> ../detect/`/bin/date +%F`_AI.log &
+##source ../y8cuda/bin/activate
+##python3 AI2.py -nsz -d -y8v 2>/dev/null >> ../detect/`/bin/date +%F`_AI.log &
+
+# TPU initial AI and yolo8 TPU verification
+source ../y8tpu/bin/activate
+python3 AI2.py -nsz -d -tpu -y8tpu 2>/dev/null >> ../detect/`/bin/date +%F`_AI.log &

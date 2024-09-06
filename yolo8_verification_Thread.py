@@ -28,12 +28,15 @@ global __verifyConf__
 __verifyConf__ = 0.65
 
 global __y8modelSTR__
-__y8modelSTR__ = 'yolo8/yolov8x.pt'
+__y8modelSTR__ = 'yolo8/yolov8m.pt'
 
 global model
 
 global __Color__
 __Color__ = (0, 200, 200)
+
+global __useTPU__
+__useTPU__ = False
 
 
 '''
@@ -42,27 +45,57 @@ one time code to run when thread is launched.
 def threadInit():
     global model
     global __y8modelSTR__
+    global __useTPU__
     
-    # intialize and setup the model
-    # Load the YOLOv8 model
     models_dir = Path("./yolo8")
     models_dir.mkdir(exist_ok=True)
     
-    # Load the YOLOv8 model
-    model = YOLO(__y8modelSTR__)
-    print("[INFO] Using " + __y8modelSTR__ + " yolo8 pre-trained model")
+    if __useTPU__:
+        from pycoral.utils.edgetpu import list_edge_tpus
+        from pycoral.utils.edgetpu import make_interpreter
+        from pycoral.adapters import detect
+        '''
+        # list installed tpus, and figure out if any are M.2 (pci)
+        pci_tpu = list()
+        usb_tpu = list()
+        tpus = list_edge_tpus()
+        print(tpus)
+        for i in range(len(tpus)):
+            if tpus[i]['type'] == 'pci': pci_tpu.append(i)
+            if tpus[i]['type'] == 'usb': usb_tpu.append(i)
+        '''
+        # test if model has been converted, if not convert it
+        det_model_path = models_dir / f"yolov8s_saved_model/yolov8s_full_integer_quant_edgetpu.tflite"
+        if not det_model_path.exists():
+            # load and convert ultralytics yolo8 model
+            print('[INFO] Converting yolov8s model to edgetpu format.')
+            model = YOLO('yolo8/yolov8s')
+            model.export(format="edgetpu", imgsz=512)
+
+        # load the model 
+        model = YOLO('yolo8/yolov8s_saved_model/yolov8s_full_integer_quant_edgetpu.tflite',task='detect', verbose=False)
+        print('[INFO] Using yolov8s pre-trained model compiled for TPU.') 
+
+    else:   # use CUDA
+        # Load the YOLOv8 model
+        model = YOLO(__y8modelSTR__)
+        print("[INFO] Using " + __y8modelSTR__ + " yolo8 pre-trained model")
     return
 
 
 
 def do_inference( image, model,  confidence ):
+    global __useTPU__
     
     boxPoints=(0,0, 0,0, 0,0, 0,0)  # startX, startY, endX, endY, Xcenter, Ycenter, Xlength, Ylength
     personDetected = False
     detectConfidence = 0.0
-    # call code to do an inference
-    results = model.predict(image, conf=confidence-0.001, verbose=False)
-    ###results = model.predict(image, conf=confidence-0.001, verbose=True) # debug to verify using CUDA by inference time.
+    # call code to do an inference 
+    if __useTPU__:
+        results = model.predict(image, imgsz=512, conf=confidence-0.001, verbose=False)
+    else:
+        results = model.predict(image, conf=confidence-0.001, verbose=False)
+        ###results = model.predict(image, conf=confidence-0.001, verbose=True) # debug to verify using CUDA by inference time.
     # Visualize the results on the image
     annotated_image = results[0].plot(line_width=1, labels=False)
     for result in results:
@@ -90,6 +123,7 @@ def yolov8_thread(results, yoloQ):
     global __Thread__
     global __verifyConf__
     global __Color__
+    global __useTPU__
     
     print("Starting Yolo v8 verification thread...")
     if yoloQ is None:
@@ -102,7 +136,10 @@ def yolov8_thread(results, yoloQ):
     dcnt=0
     ecnt=0
     ncnt=0
-    print("Yolo v8 verification thread is running...")
+    if __useTPU__:
+        print("Yolo v8 TPU verification thread is running...")
+    else:
+        print("Yolo v8 CUDA verification thread is running...")
     __Thread__ = True
 
     while __Thread__ is True:
@@ -123,7 +160,10 @@ def yolov8_thread(results, yoloQ):
                 ## boxPoints are from the SSD inference.
                 # draw the verification confidence onto the ssd_frame
                 yoloVerified+=1
-                text = "Yolo8: {:.1f}%".format(detectConfidence * 100)   # show verification confidence on detection image
+                if __useTPU__:
+                    text = "Yolo8tpu: {:.1f}%".format(detectConfidence * 100)   # show verification confidence on detection image
+                else:
+                    text = "Yolo8cuda: {:.1f}%".format(detectConfidence * 100)   # show verification confidence on detection image
                 cv2.putText(ssd_frame, text, (2, 56), cv2.FONT_HERSHEY_SIMPLEX, 1.0, __Color__, 2)
                 if results.full():
                     [_,_,_,_,_,_,_]=results.get(False)  # remove oldest result 

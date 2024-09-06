@@ -93,6 +93,7 @@ if 1:
     # enable zoom and verify using yolo inference (requires Nvidia cuda capable video card and working CUDA installation.
     ap.add_argument("-y8v", "--yolo8_verify", action="store_true", help="Verify detection with a CUDA yolov8 inference on zoomed region")
     ap.add_argument("-y8ovv", "--yolo8ov_verify", action="store_true", help="Verify detection with openvino GPU yolov8 inference on zoomed region")
+    ap.add_argument("-y8tpu", "--yolo8tpu_verify", action="store_true", help="Verify detection with a CUDA yolov8 inference on zoomed region")
     
     # parameters that might be installation dependent
     ap.add_argument("-c", "--confidence", type=float, default=0.70, help="Detection confidence threshold")
@@ -352,10 +353,11 @@ def main():
             print(" Path to location to save detection images must exist!  Exiting ...")
             client.publish("AI/Status", "Path to location to save detection images must exist!  Exiting ...", 2, True)
             quit()
+    yolo8_verify=args["yolo8_verify"]
     OVyolo8_verify=args["yolo8ov_verify"]
+    TPUyolo8_verify=args["yolo8tpu_verify"]
     yoloVQdepth=args["YoloVQ"]
     resultsQdepth=args["resultsQ"]
-    yolo8_verify=args["yolo8_verify"]
 
 
     if yolo8_verify and OVyolo8_verify:
@@ -490,7 +492,7 @@ def main():
     for i in range(Ncameras):
         inframeQ.append(Queue(QDEPTH))
 
-    if yolo8_verify or OVyolo8_verify:
+    if yolo8_verify or OVyolo8_verify or TPUyolo8_verify:
         ###yoloQ = Queue(max(10,Ncameras))  # this can lead to very long latencies if the AI thread is much faster than the yolo verification thread.
         yoloQ = Queue(yoloVQdepth)   # This should be approx the lessor of the AI thread frame rate or yolo verification frame rate
     else:
@@ -537,7 +539,7 @@ def main():
                 cv2.imshow(name, img)
                 cv2.waitKey(1)
         # setup yolov4 verification windows
-        if (OVyolo8_verify or yolo8_verify) and show_yolo:
+        if (OVyolo8_verify or yolo8_verify or TPUyolo8_verify) and show_yolo:
             print("[INFO] setting up YOLO verification/reject image windows ...")
             cv2.namedWindow("yolo_verify", flags=cv2.WINDOW_GUI_NORMAL + cv2.WINDOW_AUTOSIZE)
             cv2.imshow("yolo_verify", img)
@@ -600,12 +602,18 @@ def main():
     YOLOv8x	    640 	53.9	479.1	 3.53	    68.2	    257.8
     '''
     if yolo8_verify:
-        #import Ultralytics yolo8
+        # import Ultralytics yolo8
         client.publish("AI/Status", "Loading Ultralytics CUDA yolo8.", 2, True)
         import yolo8_verification_Thread
         # using yolov8m.pt for now m seems the best speed-accuracy tradeoff
         yolo8_verification_Thread.__y8modelSTR__ = 'yolo8/yolov8m.pt'
         yolo8_verification_Thread.__verifyConf__ = yoloVerifyConf
+    if TPUyolo8_verify:
+        # import Ultralytics yolo8 thread, flag to use TPU instead of CUDA, small model 512x512
+        client.publish("AI/Status", "Loading Ultralytics TPU yolo8.", 2, True)
+        import yolo8_verification_Thread
+        yolo8_verification_Thread.__verifyConf__ = yoloVerifyConf
+        yolo8_verification_Thread.__useTPU__ = True
     if OVyolo8_verify:
         client.publish("AI/Status", "Loading OpenVINO yolo8.", 2, True)
         import yolo8OpenvinoVerification_Thread
@@ -620,25 +628,15 @@ def main():
         print("\n[INFO] starting Coral TPU AI Thread ...")
         client.publish("AI/Status", "Starting Coral TPU thread.", 2, True)
         import Coral_TPU_Thread
-        print("   [INFO] parsing mobilenet_ssd_v2 coco class labels for Coral TPU...")
-        modelPath = "mobilenet_ssd_v2/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite"
-        labels = Coral_TPU_Thread.read_label_file("mobilenet_ssd_v2/coco_labels.txt")
-        model = Coral_TPU_Thread.make_interpreter(modelPath)    # if both installed can't predict which will be used.
-        ##model = Coral_TPU_Thread.make_interpreter(modelPath, "usb")   # choose usb TPU if both installed
-        ##model = Coral_TPU_Thread.make_interpreter(modelPath, "pci")   # use pci TPU if both installed
-        ##model = Coral_TPU_Thread.make_interpreter(classification_model, device=':0')
-        ##model = Coral_TPU_Thread.make_interpreter(detection_model, device=':1')
-        model.allocate_tensors()
-
         # *** start Coral TPU threads
         Ct = list() ## not necessary only supporting a single TPU for now.
         print("   ... loading model...")
-        if __DEBUG__:
-            Coral_TPU_Thread.__DEBUG__ = True
         if yolo8_verify or OVyolo8_verify:
             Coral_TPU_Thread.__VERIFY_DIMS__ = (640,640)
+        if TPUyolo8_verify:
+            Coral_TPU_Thread.__VERIFY_DIMS__ = (512,512)
         Ct.append(Thread(target=Coral_TPU_Thread.AI_thread,
-            args=(resultsQ, inframeQ, model, i, cameraLock, nextCamera, Ncameras,
+            args=(resultsQ, inframeQ, cameraLock, nextCamera, Ncameras,
                     PREPROCESS_DIMS, confidence, verifyConf, "TPU", blobThreshold,  yoloQ)))
         Ct[0].start()
         sleepCount=0
@@ -659,9 +657,11 @@ def main():
         CPUt = list()
         if yolo8_verify or OVyolo8_verify:
             OpenVINO_SSD_Thread.__VERIFY_DIMS__ = (640,640)
+        if TPUyolo8_verify:
+            OpenVINO_SSD_Thread.__VERIFY_DIMS__ = (512,512)
         # We no longer instance the model here and pass it to the thread, instance it in the thread.
         CPUt.append(Thread(target=OpenVINO_SSD_Thread.AI_thread,
-                    args=(resultsQ, inframeQ, None, i, cameraLock, nextCamera, Ncameras,
+                    args=(resultsQ, inframeQ, cameraLock, nextCamera, Ncameras,
                     PREPROCESS_DIMS, confidence-0.1, verifyConf-0.1, "SSDv2_IR10_CPU", blobThreshold, yoloQ)))
         CPUt[0].start()
         # wait for OpenVINO_SSD_Thread to start, so I can see any error messages can be tough to tell which thread they are from.
@@ -688,16 +688,20 @@ def main():
         while yolo8OpenvinoVerification_Thread.__Thread__ is False:
             sleepCount+=1
             time.sleep(1.0)
-            if sleepCount >= 15:
+            if sleepCount >= 25:
                 print('[ERROR] OpenVINO yolo8 thread failed to start, exiting...')
                 client.publish("AI/Status", "[ERROR] OpenVINO yolo8 thread failed to start, exiting...", 2, True)
                 quit()
         print("[INFO] OpenVINO yolo_v8 verification thread is running. ")
 
-    if yolo8_verify:
-        # Start Ultralytics yolo8 verification thread
-        print("\n[INFO] Ultralytics yolo_v8 verification thread is starting... ")
-        client.publish("AI/Status", "Starting Ultralytics CUDA yolo8 verification Thread.", 2, True)
+    if yolo8_verify or TPUyolo8_verify:
+        if TPUyolo8_verify:
+            print("\n[INFO] Ultralytics TPU yolo_v8 verification thread is starting... ")
+            client.publish("AI/Status", "Starting Ultralytics TPU yolo8 verification Thread.", 2, True)
+        else:
+            # Start Ultralytics yolo8 verification thread
+            print("\n[INFO] Ultralytics CUDA yolo_v8 verification thread is starting... ")
+            client.publish("AI/Status", "Starting Ultralytics CUDA yolo8 verification Thread.", 2, True)
         yolo8=list()
         yolo8.append(Thread(target=yolo8_verification_Thread.yolov8_thread,args=(resultsQ, yoloQ)))
         yolo8[0].start()
@@ -706,10 +710,14 @@ def main():
         while yolo8_verification_Thread.__Thread__ is False:
             sleepCount+=1
             time.sleep(1.0)
-            if sleepCount >= 15:
-                client.publish("AI/Status", "[ERROR] Cuda yolo8 thread failed to start, exiting...", 2, True)
-                print('[ERROR] Cuda yolo8 thread failed to start, exiting...')
-                quit()
+            if sleepCount >= 30:
+                if TPUyolo8_verify:
+                    client.publish("AI/Status", "[ERROR] TPU yolo8 thread failed to start, exiting...", 2, True)
+                    print('[ERROR] TPU yolo8 thread failed to start, exiting...')
+                else:
+                    client.publish("AI/Status", "[ERROR] CUDA yolo8 thread failed to start, exiting...", 2, True)
+                    print('[ERROR] CUDA yolo8 thread failed to start, exiting...')
+                #quit()
         print("[INFO] Ultralytics yolo_v8 verification thread is running. ")
 
 
@@ -1009,12 +1017,19 @@ def main():
         client.publish("AI/Status", "CPU AI  Thread has exited.", 2, True)
 
     #$$$#  stop yolo verify thread
-    if yolo8_verify:
-        print("[INFO] Stopping CUDA yolo8 verification Thread ...")
+    if yolo8_verify or TPUyolo8_verify:
+        if TPUyolo8_verify:
+            print("[INFO] Stopping TPU yolo8 verification Thread ...")
+        else:
+            print("[INFO] Stopping CUDA yolo8 verification Thread ...")
         yolo8_verification_Thread.__Thread__ = False
         yolo8[0].join()
-        print("[INFO] yolov8 verification Thread has exited.")
-        client.publish("AI/Status", "CUDA yolov8 verification Thread has exited.", 2, True)
+        if TPUyolo8_verify:
+            print("[INFO] yolov8 TPU verification Thread has exited.")
+            client.publish("AI/Status", "TPU yolov8 verification Thread has exited.", 2, True)
+        else:
+            print("[INFO] yolov8 CUDA verification Thread has exited.")
+            client.publish("AI/Status", "CUDA yolov8 verification Thread has exited.", 2, True)
 
     # destroy all windows if we are displaying them
     if args["display"] > 0:

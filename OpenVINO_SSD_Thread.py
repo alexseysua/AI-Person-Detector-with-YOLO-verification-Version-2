@@ -34,7 +34,7 @@ __Color__ = (0, 200, 200)
 ## *** OpenVINO 2024 CPU SSD AI Thread ***
 #******************************************************************************************************************
 #******************************************************************************************************************
-def AI_thread(resultsQ, inframe, net, tnum, cameraLock, nextCamera, Ncameras,
+def AI_thread(resultsQ, inframe, cameraLock, nextCamera, Ncameras,
                 PREPROCESS_DIMS, confidence, verifyConf, dnnTarget, blobThreshold, yoloQ):
     global __Thread__
     global __VERIY_DIMS__
