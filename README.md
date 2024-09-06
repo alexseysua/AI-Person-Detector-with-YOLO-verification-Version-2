@@ -1,5 +1,13 @@
 # AI-Person-Detector-with-YOLO-verification-Version-2
 This is "Version 2" of the repo: https://github.com/wb666greene/AI-Person-Detector-with-YOLO-Verification.  The major difference is a much easier install since nearly everything can be done with PIP and a python virtual environment.  All the support for old hardware not capable of running yolo8 has been removed, since yolo8 is the key to the very low false alert rate.  I've tested it on Ubuntu 20.04 and 22.04, other Linux distributions with openvino and/or cuda support should work.  
+### New 5SEP2024:
+Ultralytics export of yolo8 model to Coral TPU edgetpu.tflite format.  The "nano" model is just not good enough.  The "small" model seems to work well, but had to reduce the size from 640 to 512 so it would fit in the TPU.  With two TPUs most any system capable of decoding multiple HD/UHD video streams should now be usable if you can find the TPU driver support for it.  This brings the Raspberry Pi 4/5 back into play as a host for a small system.  If you want try it on a Raspberry Pi these should help get you started with the drivers:
+```
+https://www.hackster.io/stefanw1/yolov8-on-raspberry-pi5-with-coral-tpu-8efd23
+https://docs.ultralytics.com/guides/raspberry-pi/
+https://github.com/StefansAI/Yolov8_Rpi5_CoralUSB/tree/main
+https://github.com/DAVIDNYARKO123/edge-tpu-silva
+```
 ### New 31AUG2024:
 Everything is now pip installable in a virtual environment, so running it on Windows or WSL shouldn't be too difficult, it is not anything I'm interested in doing, but if you manage to run it on Windows or WSL please submit your instructions/patches so I can add them here.  Raise issues and I'll try to help out, especially if I broke Windows/Linux compatability in my python code (which is likely becasue of file naming conventions, especially case sensitivity).
 
@@ -8,6 +16,7 @@ for using Intel integrated GPU or Nvidia GPU for yolo verification.  Motivated b
 https://igor.technology/installing-coral-usb-accelearator-python-3-10-ubuntu-22/
 Which allows using the TPU on system python 3.10 eliminating the need for virtual environments for the basic AI,
 although I still strongly recommend using virtual environments since breaking old code has never been much of a consideration for OpenVINO.
+It has also been installed and tested on Ubuntu-Mate 20.04, comments in the copy-and-paste command sections note the differences.
 
 Here is an image sequence that shows the software in action, made from the detection images as a solicitor walks from my neighbor's yard, across the street, to my front door, leaves his flyer, and proceeds across my yard on to the next house. He walks across the field of view of multiple cameras with various resolutions of 4K, 5Mpixel, & 1080p, this system used GTX1060 CUDA yolo8 and Coral M.2 TPU: 
 https://youtu.be/XZYyE_WsRLI
@@ -29,7 +38,12 @@ To avoid having to edit the scripts used by node-red make a sym link in /home:
 sudo ln -s /home/YourUserName /home/ai
 ```
 
-# 1) Install needed packages
+# 1a) Install needed packages
+Make sure system is up to date:
+```
+sudo apt update
+sudo apt upgrade
+```
 I like loging in remotely over via ssh, as running "headless" is a design goal, but it can all be done with a terminal window as well. OpenSSH is not installed by default so either install "OpenSSH" using "Control Center Software Boutique" or in a terminal window do:
 ```
 sudo apt install ssh
@@ -37,13 +51,92 @@ sudo apt install ssh
 Now in a terminl window or your remote shell login, install these extra packages with:
 ```
 sudo apt install git curl samba python3-dev python3-pip python3.10-venv espeak mosquitto mosquitto-dev mosquitto-clients cmake
+# if using 20.04 change python3.10-venv to python3.8-venv in the above command.
 ```
+# 1b) Setup to use the Coral TPU if you plan to use one for SSD or YOLO8.
+NOTE: on my i9-12900 I get ~42 frames per second for MobilenetSSD_v2 with both OpenVINO CPU and Coral TPU, but I believe that this is limited by the aggregate frame rate of my six onvif cameras.  It is on lesser hardware, like i3, where the TPU is well worth its modest cost, adding two lets you do yolo8 on the TPU as well.
+
+Add the "current" coral repo:
+```
+echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo apt update
+sudo apt install libedgetpu1-std
+```
+If you want TPU to run full speed:
+```
+sudo apt install libedgetpu1-max
+```
+
+If you want to use the M.2, mPCIe, etc. TPUs:
+Depending on when and where you install you can get different kernel versions.
+Virgin install on 1AUG2024 on Celeron got: 6.5.0-45-generic #45~22.04.1-Ubuntu
+on my i9 setup in 2022 I got: 5.15.0-113-generic #123-Ubuntu
+Don't install this if you have v6 kernel but it is not fatal, can "sudo apt remove" it later if necessary.
+```
+sudo apt install gasket-dkms
+```
+NOTE: the dkms build fails on kernel v6.+ what worked to fix it:
+```
+sudo apt remove gasket-dkms     # only if you did apt install gasket-dms on v6+ kernel
+sudo apt install devscripts debhelper -y
+git clone https://github.com/google/gasket-driver.git
+cd gasket-driver; debuild -us -uc -tc -b; cd ..
+sudo dpkg -i gasket-dkms_1.0-18_all.deb
+```
+Next setup the apex user and verify the PCI-E installation:
+```
+sudo sh -c "echo 'SUBSYSTEM==\"apex\", MODE=\"0660\", GROUP=\"apex\"' >> /etc/udev/rules.d/65-apex.rules"
+sudo groupadd apex
+#!!! Make sure the following command is being done as ai user, not as sudo -i
+sudo adduser $USER apex
+```
+Now reboot the system.
+Once rebooted, verify that the accelerator module is detected:
+```
+lspci -nn | grep 089a
+```
+You should see something like this:
+03:00.0 System peripheral: Device 1ac1:089a
+The 03 number and System peripheral name might be different, because those are host-system specific, 
+but as long as you see a device listed with 089a then you're okay to proceed.
+
+Also verify that the PCIe driver is loaded:
+```
+ls /dev/apex_0
+```
+You should simply see the name repeated back:
+/dev/apex_0
+
+Plug in a USB TPU and do:
+```
+lsusb
+```
+And you should see something like: "ID 18d1:9302 Google Inc." in the listing.
+
+#### Finally download the pycoral python module for python 3.10
+This article showed me how:
+https://igor.technology/installing-coral-usb-accelearator-python-3-10-ubuntu-22/
+Download the python "wheel" files for python10 from:
+```
+https://github.com/hjonnala/snippets/tree/main/wheels/python3.10
+# I downloaded them to the TPU_python3.10 directory.
+```
+
+#### If using 20.04 you need the python3.8 versions instead:
+```
+https://github.com/google-coral/pycoral/releases/download/v2.0.0/pycoral-2.0.0-cp38-cp38-linux_x86_64.whl
+https://github.com/google-coral/pycoral/releases/download/v2.0.0/tflite_runtime-2.5.0.post1-cp38-cp38-linux_x86_64.whl
+# I downloaded these to the TPU_python3.8 directory.
+```
+We'll use these when we create the virtual environment below.
 
 # 2) Create Python Virtual environment and install the needed python modules
 Note Conda works well too, and I prefer it if you need a different python version than the system python3, but Conda  has issues being launched from a shell script via a node-red exec node.  If you know a solution, please send it to me.  I'm not very good with GitHub so you may need to help me with doing "pull requests" if it is not something you can just Email to me.
-
+### Genarally you only need to setup one of these virtual environments.
+All include OpenVINO, so that CPU MobilenetSSD_v2 can be used for the initial AI, although a TPU works better.
 ## 2a) Create a virtual environment to to use with OpenVINO and YOLO8, named y8ovv.
-NOTE: If using CUDA skip to section 2b) below and create a venv named y8cuda.  I had conflicts trying to get both OpenVINO iGPU and CUDA working in the same environment.  It is not really a big limitation as it seems that CUDA and OpenCL can't both be used at the same time for GPU acceleration.
+NOTE: If using CUDA skip to section 2b and create a venv named y8cuda. If using TPU yolo skip to section 2c below and create a venv named y8tpu.  I had conflicts trying to get both OpenVINO iGPU and CUDA working in the same environment.  It is not really a big limitation as it seems that CUDA and OpenCL can't both be used at the same time for GPU acceleration.
 ```
 python3 -m venv y8ovv
 ```
@@ -56,8 +149,16 @@ Use pip to install the needed modules:
 ```
 pip install -U pip setuptools
 pip install imutils paho-mqtt requests
+pip install opencv-python
 pip install "openvino>=2024.2.0" "nncf>=2.9.0"
 pip install "torch>=2.1" "torchvision>=0.16" "ultralytics==8.2.24" onnx tqdm opencv-python --extra-index-url https://download.pytorch.org/whl/cpu
+# if using TPU
+pip install TPU_python3.10/tflite_runtime-2.5.0.post1-cp310-cp310-linux_x86_64.whl
+pip install TPU_python3.10/pycoral-2.0.0-cp310-cp310-linux_x86_64.whl
+# or if using 20.04
+pip install TPU_python3.8/tflite_runtime-2.5.0.post1-cp38-cp38-linux_x86_64.whl
+pip install TPU_python3.8/pycoral-2.0.0-cp38-cp38-linux_x86_64.whl
+
 ```
 If necessary, exit the virtual environment with "deactive" and the (y8ovv) prefix should disappear from the prompt.
 
@@ -109,6 +210,9 @@ pip install ultralytics
 # Only if uisng TPU
 pip install TPU_python3.10/tflite_runtime-2.5.0.post1-cp310-cp310-linux_x86_64.whl
 pip install TPU_python3.10/pycoral-2.0.0-cp310-cp310-linux_x86_64.whl
+# or if using 20.04
+pip install TPU_python3.8/tflite_runtime-2.5.0.post1-cp38-cp38-linux_x86_64.whl
+pip install TPU_python3.8/pycoral-2.0.0-cp38-cp38-linux_x86_64.whl
 ```
 In the virtual environment test the cuda/pytorch install with:
 ```
@@ -120,8 +224,26 @@ Type "help", "copyright", "credits" or "license" for more information.
 True
 >>> #Ctrl-d to exit
 ```
-
-
+## 2c) Create virtual environment for TPU yolo8:
+(Don't forget sudo apt install python3.8-venv, if you didn't do it in step 0)
+```
+# set up virtual environment for yolo8 on Coral TPU
+python3 -m venv y8tpu
+source y8tpu/bin/activate
+# prompt should change: to  (y8tpu) ai@hostname:~$
+pip install -U pip setuptools
+pip install TPU_python3.10/tflite_runtime-2.5.0.post1-cp310-cp310-linux_x86_64.whl
+pip install TPU_python3.10/pycoral-2.0.0-cp310-cp310-linux_x86_64.whl
+# or if using 20.04
+pip install TPU_python3.8/tflite_runtime-2.5.0.post1-cp38-cp38-linux_x86_64.whl
+pip install TPU_python3.8/pycoral-2.0.0-cp38-cp38-linux_x86_64.whl
+pip install opencv-python
+#install openvino, not strictly necessary, but need it if you want CPU MobilenetSSD_v2 AI
+pip install "openvino>=2024.2.0" "nncf>=2.9.0"
+pip install "torch>=2.1" "torchvision>=0.16" "ultralytics==8.2.24" onnx tqdm opencv-python --extra-index-url https://download.pytorch.org/whl/cpu
+pip install imutils paho-mqtt requests
+```
+Nothing special needs to be done except for installing the TPU drivers for multiple TPUs.  Two USB can skip the M.2 steps, The USB should all be taken care of by the apt install.
 # 3) Clone this repo
 ```
 git clone https://github.com/wb666greene/AI-Person-Detector-with-YOLO-verification-Version-2.git
@@ -277,74 +399,7 @@ ai ALL=(ALL) NOPASSWD:ALL
 ```
 
 
-# 5) Setup to use the Coral TPU
-NOTE: on my i9-12900 I get ~42 frames per second for MobilenetSSD_v2 with both OpenVINO CPU and Coral TPU, but I believe that this is limited by the aggregate frame rate of my six onvif cameras.  It is on lessor hardware, like i3, where the TPU is well worth its modest cost.
-
-Add the "current" coral repo:
-```
-echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
-curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-sudo apt update
-sudo apt install libedgetpu1-std
-```
-If you want TPU to run full speed:
-```
-sudo apt install libedgetpu1-max
-```
-
-If you want to use the M.2, mPCIe, etc. TPUs:
-Depending on when and where you install you can get different kernel versions.
-Virgin install on 1AUG2024 on Celeron got: 6.5.0-45-generic #45~22.04.1-Ubuntu
-on my i9 setup in 2022 I got: 5.15.0-113-generic #123-Ubuntu
-Don't install this if you have v6 kernel but it is not fatal, can "sudo apt remove" it later if necessary.
-```
-sudo apt install gasket-dkms
-```
-NOTE: the dkms build fails on kernel v6.+ what worked to fix it:
-```
-sudo apt remove gasket-dkms     # only if you did apt install gasket-dms on v6+ kernel
-sudo apt install devscripts debhelper -y
-git clone https://github.com/google/gasket-driver.git
-cd gasket-driver; debuild -us -uc -tc -b; cd ..
-sudo dpkg -i gasket-dkms_1.0-18_all.deb
-```
-Next setup the apex user and verify the PCI-E installation:
-```
-sudo sh -c "echo 'SUBSYSTEM==\"apex\", MODE=\"0660\", GROUP=\"apex\"' >> /etc/udev/rules.d/65-apex.rules"
-sudo groupadd apex
-#!!! Make sure the following command is being done as ai user, not as sudo -i
-sudo adduser $USER apex
-```
-Now reboot the system.
-Once rebooted, verify that the accelerator module is detected:
-```
-lspci -nn | grep 089a
-```
-You should see something like this:
-03:00.0 System peripheral: Device 1ac1:089a
-The 03 number and System peripheral name might be different, because those are host-system specific, 
-but as long as you see a device listed with 089a then you're okay to proceed.
-
-Also verify that the PCIe driver is loaded:
-```
-ls /dev/apex_0
-```
-You should simply see the name repeated back:
-/dev/apex_0
-
-### Finally download and install the pycoral python module for python 3.10
-This article showed me how:
-https://igor.technology/installing-coral-usb-accelearator-python-3-10-ubuntu-22/
-Download the python "wheel" files for python10 from:
-https://github.com/hjonnala/snippets/tree/main/wheels/python3.10
-I downloaded them to the folder TPU_python3.10
-### Make your virtual environment active and do:
-```
-pip install TPU_python3.10/tflite_runtime-2.5.0.post1-cp310-cp310-linux_x86_64.whl
-pip install TPU_python3.10/pycoral-2.0.0-cp310-cp310-linux_x86_64.whl
-```
-
-# 6) Some useful options:
+# 5) Some useful options:
 ### It is best to put AI detections on a seperate drive or USB stick, but not necessary,
 I had to mount the external device to create the /media/ai directory where it will mount,
 then unmount it and do:
@@ -404,7 +459,7 @@ sudo nano /etc/samba/smb.conf
 sudo smbpasswd -a ai
 ```
 
-# 7) Open Source Alternatives.
+# 6) Open Source Alternatives.
 My system was designed to be an addon to an existing DVR/NVR which seemed far easier than re-inventing this wheel, although it works fine with just IP or "net cams".  Most consumer priced DVR/NVR have really poor user interfaces, so my AI detection gives a much more efficient way to find regions of interest in the recordings using the timestamps built into the filenames than the typically lame timeline "scrubbing" of most consumer DVR/NVR.  I installed my first DVR in 2014 and in these 10 years I've gone back and actually looked at recorded video maybe half a dozen times since, but the 24/7 recordings can be "nice to have" if something really bad happens.
 
 ## Frigate
@@ -454,7 +509,7 @@ https://www.bluecherrydvr.com/
 https://github.com/bluecherrydvr/unity
 
 
-# 8) Some performance summaries on different hardware.
+# 7) Some performance summaries on different hardware.
 Note: "dropped" is number of detections that were dropped because writing to the output queue timed out, "results dropped" are frames without detection that were dropped writing to the output queue, the time out is much shorter for frames with no detection. Dropping an image without a person detected only has consequences for the live display.  The "detections failed zoom-in verification" are frames with a person that failed the Mobilenet detection when frame was cropped around the detected person and then failed the re-detect, this can greatly reduce the load on the Yolo thread.  These are most common with fixed objects in the frame that mis-detect as a person when the light is just "right", these tend to come in bursts of seconds to minutes long, usually as the sun is rising, setting, or approaching noon.
 
 ### Lenovo Ideapad3 i3-1115GS4 @3Ghz 4 cores, Mesa UHD graphics (TGL GT2), 8GB RAM, Ubuntu-Mate 20.04
