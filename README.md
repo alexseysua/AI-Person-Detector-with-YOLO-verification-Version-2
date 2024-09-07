@@ -624,13 +624,32 @@ TPU, waited: 59899 dropped: 159 out of 148014 images.  AI: 14.65 inferences/sec
    TPU Persons Detected: 789,  Frames with no person: 147225
    TPU 8182 TPU detections failed zoom-in verification.
    TPU Detections dropped: 0, results dropped: 159, results.put() exceptions: 0
-# Easily supports 4UHD (4K) cameras, not very usable without Coral TPU.
-# This board is ~$160, by time you add M.2 TPU, power supply and M.2 SSD
-# you are over $230, which is why I've lost interest in IOT class hardware
-# and think "last year's model bottom of the line" laptop close-outs or
-# "buisness class" refubished laptops are a better bet if cost matters
-# more than physical space, since basically has to be "headless" if cost matters.
 ```
+Easily supports 4UHD (4K) cameras, not very usable without Coral TPU.
+This board is ~$160, by time you add M.2 TPU, power supply and M.2 SSD
+you are over $230, which is why I've lost interest in IOT class hardware
+and think "last year's model bottom of the line" laptop close-outs or
+"buisness class" refubished laptops are a better bet if cost matters
+more than physical space, since basically has to be "headless" if cost matters.
 Here is a photo of the YouYeeTwoX1, it is a bit larger than a RasperryPi:
 ![YouyeetooX1](https://github.com/user-attachments/assets/54c51644-a9e0-4af6-bb9f-7d885c1ffd94)
 Running headless, only the coaxial power connector and Ethernet cable would be plugged in, along with a powered speaker, not shown in the photo, if you want audio (usually you will).
+### Old i5-4200U with iGPU not compatible with openvino using two TPUs and 9 UHD (4K) cameras.
+```
+# command:
+(y8tpu) python AI2.Py -d -nsz -tpu -y8tpu
+*** AI processing approx. FPS: 27.17 ***
+    [INFO] Run elapsed time: 5684.75
+    [INFO] Frames processed by AI system: 154463
+    [INFO] Person Detection by AI system: 818
+    [INFO] Main loop waited for resultsQ: 8148 times.
+
+Yolo v8 frames Verified: 818, Rejected: 83,  Waited: 5336 seconds.
+    Verified dropped: 0 results dropped: 0 results.put() exceptions: 0
+
+TPU, waited: 5745 dropped: 564 out of 155037 images.  AI: 27.95 inferences/sec
+   TPU Persons Detected: 901,  Frames with no person: 154136
+   TPU 4762 TPU detections failed zoom-in verification.
+   TPU Detections dropped: 0, results dropped: 564, results.put() exceptions: 0
+```
+Since each camera is ~3fps this is basically processing every frame.  Running with only a single TPU and using CPU for the SSD AI, basically got 9.5fps, which is usable but not optimum. But you can start with a single tpu and three or four cameras, and then add another TPU (USB ~$60, M.2 ~$30) when adding more cameras.
