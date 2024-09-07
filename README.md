@@ -112,7 +112,8 @@ Plug in a USB TPU and do:
 ```
 lsusb
 ```
-And you should see something like: "ID 18d1:9302 Google Inc." in the listing.
+And you should see something like: "ID 18d1:9302 Google Inc." in the listing, or "ID 1a6e:089a Global Unichip Corp." for older TPUs.
+If in doubt, do lsusb before plugging in the TPU, and then do it again to see if the device is added.
 
 #### Finally download the pycoral python module for python 3.10
 This article showed me how:
